@@ -112,25 +112,25 @@ class TestWordSampling(unittest.TestCase):
                                             'vamp', 'vampirism', 'werewolf', 'witch', 'wolfman', 'zombie']
         self.assertIn(similar_meaning_word('vampire'), similar_meaning_to_vampire_words)
 
-    def test_intratextually_associated_words(self):
-        self.assertEqual(intratextually_associated_words('nonexistentword'), [])
+    def test_frequently_intratextually_coappearing_words(self):
+        self.assertEqual(frequently_intratextually_coappearing_words('nonexistentword'), [])
         intratextually_associated_w_metamorphosis = ['budding', 'cocoon', 'duff', 'frogs', 'gills', 'hatching',
                                                      'juvenile', 'kafka', 'lamprey', 'larva', 'metamorphose',
                                                      'narcissus', 'nymph', 'polyp', 'polyps', 'pupa', 'pupal',
                                                      'salamander', 'starfish', 'tadpole']
-        self.assertEqual(sorted(intratextually_associated_words('metamorphosis', sample_size=None)),
+        self.assertEqual(sorted(frequently_intratextually_coappearing_words('metamorphosis', sample_size=None)),
                          intratextually_associated_w_metamorphosis)
-        results = intratextually_associated_words('metamorphosis', sample_size=6)
+        results = frequently_intratextually_coappearing_words('metamorphosis', sample_size=6)
         self.assertEqual(len(results), 6)
         self.assertTrue(set(intratextually_associated_w_metamorphosis).issuperset(set(results)))
 
-    def test_intratextually_associated_word(self):
-        self.assertIsNone(intratextually_associated_word('nonexistentword'))
+    def test_frequently_intratextually_coappearing_word(self):
+        self.assertIsNone(frequently_intratextually_coappearing_word('nonexistentword'))
         intratextually_associated_w_metamorphosis = ['budding', 'cocoon', 'duff', 'frogs', 'gills', 'hatching',
                                                      'juvenile', 'kafka', 'lamprey', 'larva', 'metamorphose',
                                                      'narcissus', 'nymph', 'polyp', 'polyps', 'pupa', 'pupal',
                                                      'salamander', 'starfish', 'tadpole']
-        self.assertIn(intratextually_associated_word('metamorphosis'), intratextually_associated_w_metamorphosis)
+        self.assertIn(frequently_intratextually_coappearing_word('metamorphosis'), intratextually_associated_w_metamorphosis)
 
     def test_phonetically_related_words(self):
         self.assertRaises(ValueError, lambda: phonetically_related_words(2))
@@ -180,7 +180,7 @@ class TestPoemGenerator(unittest.TestCase):
 
     def test_poem_from_word_list(self):
         input_word_list = ['crypt', 'sleep', 'ghost', 'time']
-        poems = [poem_from_word_list(input_word_list, link_line_to_input_word=True),
+        poems = [poem_from_word_list(input_word_list, limit_line_to_one_input_word=True),
                  poem_from_word_list(input_word_list, lines=8)]
         expected_newlines_in_poem = [5, 7]
 

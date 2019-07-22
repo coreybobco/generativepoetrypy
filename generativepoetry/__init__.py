@@ -12,7 +12,7 @@ line_enders = ['.', ', ', '!', '?', '', ' or', '...']
 line_indents = ['', '    ', '         ']
 word_frequency_threshold = 4e-08
 
-if platform.system == 'Windows':
+if platform.system() == 'Windows':
     raise Exception('Your OS is not currently supported.')
 elif platform.system() == 'Darwin':
     try:
@@ -25,30 +25,36 @@ else:
     except Exception:
         raise Exception('This module requires the installation of the hunspell dictionary')
 
-def validate_str(input, msg='Not a string'):
-    if not isinstance(input, str):
+def validate_str(input_val, msg='Not a string'):
+    """Validate the input argument by checking if it is a string."""
+    if not isinstance(input_val, str):
         raise ValueError(msg)
 
 
-def validate_str_list(input, msg='Not a list'):
-    if not isinstance(input, list):
+def validate_str_list(input_val, msg='Not a list'):
+    """Validate the input argument by checking if it is a list of strings."""
+    if not isinstance(input_val, list):
         raise ValueError(msg)
-    for i, elem in enumerate(input):
+    for i, elem in enumerate(input_val):
         if not isinstance(elem, str):
             raise ValueError(f'Element {i + 1} not a string')
 
 
 def has_invalid_characters(string):
-    return bool(re.search(r"[\s\d\-\']", string))  # Whitespace, digits, hyphens not allowed
+    """Check if the string has unpermitted characters: whitespace, digits, and hyphens."""
+    return bool(re.search(r"[\s\d\-\']", string))
 
 
-def validate_word(string):
-    validate_str(string)
-    if has_invalid_characters(string):
+def validate_word(input_val):
+    """Check whether the input argument is a word."""
+    validate_str(input_val)
+    if has_invalid_characters(input_val):
         raise ValueError('Word may not contain digits, spaces, or special characters.')
 
 
 def too_similar(word1, word2):
+    """Check whether or not two words are too similar to follow one another in a poem, e.g. if one is the other plus s.
+    """
     if not isinstance(word1, str) or not isinstance(word2, str) or len(word1) == 0 or len(word2) == 0:
         return False
     if word1 == word2:
@@ -59,6 +65,12 @@ def too_similar(word1, word2):
 
 
 def filter_word(string, spellcheck=True):
+    """Filter out a word if it is too short, has invalid characters, is too archaic, or (optionally) cannot be found in
+    a spelling dictionary.
+
+       Keyword arguments:
+       spellcheck (bool) -- Use a spelling dictionary as filter (helps eliminate abbreviations and Internet slang).
+    """
     validate_str(string)
     if len(string) < 3:
         return False
@@ -72,6 +84,11 @@ def filter_word(string, spellcheck=True):
 
 
 def filter_word_list(word_list, spellcheck=True):
+    """Filter a list of words using the filter_word method.
+
+    Keyword arguments:
+       spellcheck (bool) -- Use a spelling dictionary as filter (helps eliminate abbreviations and Internet slang).
+    """
     word_list = list(
         filter(
             lambda word: filter_word(word, spellcheck=spellcheck), word_list
@@ -80,6 +97,13 @@ def filter_word_list(word_list, spellcheck=True):
     return word_list
 
 def rhymes(word, sample_size=None):
+    """Return a list of rhymes in randomized order for a given word if at least one can be found using the pronouncing
+    module (which uses the CMU rhyming dictionary).
+
+    Keyword arguments:
+        sample size (int) -- If provided, return a random sample of this many elements. If this number is greater than
+                            the length of the rhyme list, then just return a shuffled copy of the rhyme list.
+    """
     rhymes = filter_word_list([word for word in set(pronouncing.rhymes(word))])
     if isinstance(sample_size, int) and sample_size < len(rhymes):
         rhymes = random.sample(rhymes, k=sample_size)
@@ -88,15 +112,22 @@ def rhymes(word, sample_size=None):
 
 
 def rhyme(word):
-    """Substitute random rhyme if at least one is found"""
+    """Return a random rhyme for a given word if at least one can be found using the pronouncing module (which uses
+    the CMU rhyming dictionary).
+    """
     rhyme_list = rhymes(word)
     if len(rhyme_list):
         return next(iter(rhyme_list), None)
     return None
 
 def extract_sample(word_list, sample_size=None):
+    """Returns a random sample from the word list or a shuffled copy of the word list.
+
+    Keyword arguments:
+        sample size (int)-- If this number is greater than the length of the rhyme list, then just return a shuffled
+        copy of the rhyme list.
+    """
     if not sample_size or len(word_list) <= sample_size:
-        # Return all results returned by API that pass filter
         return random.sample(word_list, k=len(word_list))
     else:
         sample = []
@@ -109,6 +140,17 @@ def extract_sample(word_list, sample_size=None):
 
 
 def similar_sounding_words(input_word, sample_size=6, datamuse_api_max=50):
+    """Return a list of similar sounding words to a given word, in randomized order, if at least one can be found using
+    Datamuse API.
+
+    Keyword arguments:
+        sample_size (int) -- If provided, return a random sample of this many elements. If this number is greater than
+                            the length of the rhyme list, then just return a shuffled copy of the rhyme list.
+        datamuse_api_max (int) -- specifies the maximum number of results returned by the API. The API client's
+                                  results are always sorted from most to least similar sounding (according to a numeric
+                                  score provided by Datamuse), hence by using both kwargs, one can control the size of
+                                  both the sample pool and the sample size.
+    """
     validate_word(input_word)
     response = api.words(sl=input_word, max=datamuse_api_max) if datamuse_api_max else api.words(sl=input_word)
     word_list = filter_word_list([obj['word'] for obj in response])
@@ -118,10 +160,28 @@ def similar_sounding_words(input_word, sample_size=6, datamuse_api_max=50):
 
 
 def similar_sounding_word(input_word, datamuse_api_max=15):
+    """Return a random similar sounding word for a given word if at least one can be found using the Datamuse API.
+
+    Keyword arguments:
+        datamuse_api_max (int) -- specifies the maximum number of results returned by the API. The API's results are
+                                  always sorted from most to least similar sounding (according to a numeric score
+                                  provided by Datamuse).
+    """
     return next(iter(similar_sounding_words(input_word, sample_size=1, datamuse_api_max=datamuse_api_max)), None)
 
 
 def similar_meaning_words(input_word, sample_size=6, datamuse_api_max=20):
+    """Return a list of similar meaning words to a given word, in randomized order, if at least one can be found using
+    Datamuse API.
+
+    Keyword arguments:
+        sample_size (int) -- If provided, return a random sample of this many elements. If this number is greater than
+                            the length of the rhyme list, then just return a shuffled copy of the rhyme list.
+        datamuse_api_max (int) -- specifies the maximum number of results returned by the API. The API client's
+                                  results are always sorted from most to least similar meaning (according to a numeric
+                                  score provided by Datamuse), hence by using both kwargs, one can control the size of
+                                  both the sample pool and the sample size.
+    """
     validate_word(input_word)
     response = api.words(ml=input_word, max=datamuse_api_max) if datamuse_api_max else api.words(sl=input_word)
     word_list = filter_word_list([obj['word'] for obj in response], spellcheck=False)
@@ -129,28 +189,59 @@ def similar_meaning_words(input_word, sample_size=6, datamuse_api_max=20):
 
 
 def similar_meaning_word(input_word, datamuse_api_max=10):
+    """Return a random similar meaning word for a given word if at least one can be found using the Datamuse API.
+
+    Keyword arguments:
+        datamuse_api_max (int) -- specifies the maximum number of results returned by the API. The API's results are
+                                  always sorted from most to least similar meaning (according to a numeric score
+                                  provided by Datamuse).
+    """
     return next(iter(similar_meaning_words(input_word, sample_size=1, datamuse_api_max=datamuse_api_max)), None)
 
 
-def intratextually_associated_words(input_word, sample_size=6, datamuse_api_max=20):
+def frequently_intratextually_coappearing_words(input_word, sample_size=6, datamuse_api_max=20):
+    """Return a list of words that frequently appear within the same document as a given word, in randomized order,
+    if at least one can be found using the Datamuse API.
+
+    Keyword arguments:
+        sample_size (int) -- If provided, return a random sample of this many elements. If this number is greater than
+                            the length of the rhyme list, then just return a shuffled copy of the rhyme list.
+        datamuse_api_max (int) -- specifies the maximum number of results returned by the API. The API client's
+                                  results are always sorted from most to least frequently coappearing (according to a
+                                  numeric score provided by Datamuse), hence by using both kwargs, one can control the
+                                  size of both the sample pool and the sample size.
+    """
     validate_word(input_word)
     response = api.words(rel_trg=input_word, max=datamuse_api_max) if datamuse_api_max else api.words(sl=input_word)
     word_list = filter_word_list([obj['word'] for obj in response], spellcheck=False)  # Spellcheck removes proper nouns
     return extract_sample(word_list, sample_size=sample_size)
 
 
-def intratextually_associated_word(input_word, datamuse_api_max=10):
-    return next(iter(intratextually_associated_words(input_word, sample_size=1, datamuse_api_max=datamuse_api_max)),
-                None)
+def frequently_intratextually_coappearing_word(input_word, datamuse_api_max=10):
+    """Return a random word that frequently appear within the same document as a given word if at least one can be found
+    using the Datamuse API.
+
+    Keyword arguments:
+        datamuse_api_max (int) -- specifies the maximum number of results returned by the API. The API's results are
+                                  always sorted from most to least similar sounding (according to a numeric score
+                                  provided by Datamuse).
+    """
+    return next(iter(frequently_intratextually_coappearing_words(input_word, sample_size=1,
+                                                                datamuse_api_max=datamuse_api_max)), None)
 
 
-def phonetically_related_words(input, sample_size=None):
-    #  Get all rhymes and similar sounding words to a word or list of words
-    if isinstance(input, str):
-        input_words = [input]
-    elif isinstance(input, list):
-        validate_str_list(input, msg='Must provide a string or list of strings')
-        input_words = input
+def phonetically_related_words(input_val, sample_size=None):
+    """Get a list of rhymes and similar sounding words to a word or list of words.
+
+    sample_size (int) -- If provided, return a random sample of this many elements. If this number is greater than
+                         the length of the rhyme list, then just return a shuffled copy of the phonetically related
+                         word list.
+    """
+    if isinstance(input_val, str):
+        input_words = [input_val]
+    elif isinstance(input_val, list):
+        validate_str_list(input_val, msg='Must provide a string or list of strings')
+        input_words = input_val
     else:
         raise ValueError('Must provide a string or list of strings')
 
@@ -165,7 +256,14 @@ def phonetically_related_words(input, sample_size=None):
 
 
 def poem_line_from_word_list(word_list, max_line_length=35, connectors=default_connectors):
-    output, last_word = word_list[0], word_list[0]
+    """Generate a line of a visual poem from a list of words by gluing them together with random connectors (whitespace,
+       conjunctions, punctuation, and symbols).
+
+    Keyword arguments:
+        max_line_length (int) -- upper limit on the length of the return value in characters
+        connectors (list) -- list of glue strings
+    """
+    output, last_word = word_list[0], None
     connector, last_connector = None, None
     for word in word_list[1:]:
         if random.random() < (.2 + len(output)/100):  # Increasing probability of line termination as line gets longer
@@ -181,22 +279,29 @@ def poem_line_from_word_list(word_list, max_line_length=35, connectors=default_c
     return output
 
 
-def poem_from_word_list(input_word_list, lines=6, link_line_to_input_word=False):
+def poem_from_word_list(phonetic_input_word_list, lines=6, limit_line_to_one_input_word=False):
+    """Generate a visual poem from a list of words by finding some random phonetically related
+
+    Keyword arguments:
+        max_line_length (int) -- upper limit on the length of the return value in characters
+        connectors (list) -- list of glue strings
+        limit_line_to_one_input_word (bool) -- If true, when generating a line of poetry, only use words that are
+                                               phonetically related to one input word.
+    """
     connectors = [' ', '   ', '...   ', random.choice([' & ', ' and ']), '  or  ', ' or ']
     if random.random() > .7:
         connectors.append(' -> ')
     output, line_indent = '', ''
-    if link_line_to_input_word:
-        # Only use the phonetically related words for one input word to generate a poem line
+    if limit_line_to_one_input_word:
         for i in range(lines - 1):
-            linked_word = random.choice(input_word_list)
+            linked_word = random.choice(phonetic_input_word_list)
             output += poem_line_from_word_list(phonetically_related_words(linked_word), connectors=connectors)
             line_indent = random.choice(line_indents) if line_indent == '' else \
                 random.choice([li for li in line_indents if li is not line_indent])  # Don't repeat the same indent 2x
             output += random.choice(line_enders) + '\n' + line_indent
     else:
-        word_list = input_word_list.copy()
-        for word in input_word_list:
+        word_list = phonetic_input_word_list.copy()
+        for word in phonetic_input_word_list:
             word_list.extend(phonetically_related_words(word))
         for i in range(lines - 1):
             random.shuffle(word_list)
@@ -205,11 +310,13 @@ def poem_from_word_list(input_word_list, lines=6, link_line_to_input_word=False)
                 random.choice([li for li in line_indents if li is not line_indent])   # Don't repeat the same indent 2x
             output += random.choice(line_enders) + '\n'+ line_indent
 
-    output += random.choice(input_word_list[:-1]) + ' ' + input_word_list[-1]
+    output += random.choice(phonetic_input_word_list[:-1]) + ' ' + phonetic_input_word_list[-1]
     return output
 
 
 def print_poem(poem):
-        print('\n')
-        print(poem)
-        print('\n')
+    """Print the poem with a newline before and after so it's easy to take a screenshot of its 'recipe' and the poem
+    in your terminal and share it. :)"""
+    print('\n')
+    print(poem)
+    print('\n')
