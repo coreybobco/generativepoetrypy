@@ -1,5 +1,7 @@
 # Generative Poetry
 
+[![Build Status](https://travis-ci.org/coreybobco/generativepoetry-py.svg?branch=master)](https://travis-ci.org/coreybobco/generativepoetry-py)
+
 ### What is this? 
 
 This is primarily a library for procedurally generating visual poems. 
@@ -26,7 +28,8 @@ Because this library currently relies on the Python package hunspell, which does
 
 ##### OSX
 
-OSX users must install 
+OSX users must install hunspell beforehand: `brew install hunspell`
+
 ##### Linux
 
 Ubuntu/Debian users should install libhunspell-dev beforehand:  `sudo apt-get install libhunspell-dev`
