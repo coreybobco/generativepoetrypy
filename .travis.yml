@@ -10,7 +10,6 @@ matrix:
       dist: bionic
     - os: osx
       osx_image: xcode11
-      language: generic
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update          ; fi
