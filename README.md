@@ -1,6 +1,6 @@
 # Generative Poetry
 
-[![Build Status](https://travis-ci.org/coreybobco/generativepoetry-py.svg?branch=master)](https://travis-ci.org/coreybobco/generativepoetry-py)
+[![Build Status](https://travis-ci.org/coreybobco/generativepoetry-py.svg?branch=master)](https://travis-ci.org/coreybobco/generativepoetry-py)  [![Coverage Status](https://coveralls.io/repos/github/coreybobco/generativepoetry-py/badge.svg?branch=master)](https://coveralls.io/github/coreybobco/generativepoetry-py?branch=master)
 
 ### What is this? 
 
@@ -24,7 +24,8 @@ In this sense, these poems are similar to abstract paintings in which paint is t
 ### Installation
 
 ##### Windows
-Because this library currently relies on the Python package hunspell, which does not support Windows, you must use Docker. See below instructions.
+
+Because this library currently relies on the Python package hunspell, which does not support Windows, use Docker. See below.
 
 ##### OSX
 
@@ -36,16 +37,15 @@ Ubuntu/Debian users should install libhunspell-dev beforehand:  `sudo apt-get in
 
 ##### Docker
 
-
-
-### How to Use
-Run Python interactive shell from Docker
+Use docker-compose to launch a container in which the module is installed and enter the Python interactive shell within.
 
 ```
+docker-compose build .
 docker-compose up -d
 docker-compose run app python
 ```
 
+### How to Use
 Things to try:
 ```
 from utils import *
@@ -65,8 +65,8 @@ phonetically_related_words(['word', 'list'])  # Lists also work as input
 similar_meaning_words('vampire', sample_size=8)  # Synonyms and other words with related meanings
 similar_meaning_word('vampire')  # 1 at random
 
-intratextually_associated_words('metamorphosis', sample_size=10)  # Words that statistically frequently appear in the same text
-intratextually_associated_word('metamorphosis')  # 1 at random
+frequently_intratextually_coappearing_words('metamorphosis', sample_size=10)  # Words that statistically frequently appear in the same text
+frequently_intratextually_coappearing_word('metamorphosis')  # 1 at random
 
 print_poem(poem) # Adds a couple newlines around the poem so you can screenshot your creation in the terminal
 
