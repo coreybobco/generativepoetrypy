@@ -10,6 +10,10 @@ matrix:
       dist: bionic
     - os: osx
       osx_image: xcode11
+      env: TOXENV=py37
+    - os: osx
+      osx_image: xcode11
+      env: TOXENV=py36
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update          ; fi
