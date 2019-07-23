@@ -9,6 +9,7 @@ matrix:
       os: linux
       dist: bionic
     - os: osx
+      osx_image: xcode11
       language: generic
 
 before_install:
@@ -18,7 +19,7 @@ before_install:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt install -y libhunspell-dev hunspell-en-us; fi
 
 install:
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; sudo pip install --upgrade pip; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then sudo pip install --upgrade pip; fi
   - pip install -r requirements.txt
   - pip install coverage
 
