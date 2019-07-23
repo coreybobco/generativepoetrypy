@@ -11,10 +11,10 @@ matrix:
     - python: 3.6
       os: linux
       dist: bionic
-    - python: 3.7
-      os: osx
-    - python: 3.6
-      os: osx
+    - os: osx
+      env: PYTHON=37
+    - os: osx
+      env: PYTHON=36
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update          ; fi
