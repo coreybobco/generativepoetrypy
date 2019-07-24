@@ -17,7 +17,7 @@ before_install:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt install -y libhunspell-dev hunspell-en-us; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew upgrade python  ; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install hunspell; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then wget https://downloads.sourceforge.net/project/wordlist/speller/2018.04.16/hunspell-en_US-2018.04.16.zip?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fwordlist%2Ffiles%2Fspeller%2F2018.04.16%2Fhunspell-en_US-2018.04.16.zip%2Fdownload%3Fuse_mirror%3Dpilotfiber&ts=; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then wget https://github.com/elastic/hunspell/raw/master/zips/en_US.zip; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then unzip hunspell-en_US-2018.04.16.zip -d /Library/Spelling/; fi
 install:
 
