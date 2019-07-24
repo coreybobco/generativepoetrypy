@@ -18,7 +18,7 @@ before_install:
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew upgrade python  ; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install hunspell; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then wget https://github.com/elastic/hunspell/raw/master/zips/en_US.zip; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then unzip hunspell-en_US-2018.04.16.zip -d /Library/Spelling/; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then unzip en_US.zip -d /Library/Spelling/; fi
 install:
 
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then pip install -r requirements.txt; fi
