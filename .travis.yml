@@ -8,19 +8,13 @@ matrix:
     - python: 3.7
       os: linux
       dist: bionic
-    - os: osx
-      language: generic
-      osx_image: xcode11
-      env: TOXENV=py36
-    - os: osx
+    - os: osx            # python 3.7
       python: generic
       osx_image: xcode11
-      env: TOXENV=py37
 
 before_install:
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update; fi
   - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt install -y libhunspell-dev hunspell-en-us; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update          ; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew upgrade python  ; fi
   - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install hunspell; fi
 
@@ -41,6 +35,7 @@ after_success:
 
 after_script:
   - coverage report                     # display coverage report on command line
+  - if [ "$TRAVIS_OS_NAME" = "linux" ] then pip install pycodestyle pyflakes; fi
   - if [ "$TRAVIS_OS_NAME" = "linux" ] then pip install pycodestyle pyflakes; fi
   - pyflakes . | tee >(wc -l)           # static analysis
   - pycodestyle --statistics --count .  # static analysis
