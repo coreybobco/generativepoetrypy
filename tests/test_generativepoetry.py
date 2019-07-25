@@ -163,7 +163,7 @@ class TestPoemGenerator(unittest.TestCase):
         input_word_list = ['crypt', 'crypts', 'crypt', 'ghost', 'ghosts', 'lost', 'time', 'times']
         possible_words = self.get_possible_word_list(input_word_list)
         possible_connectors = [',', '...', '&', 'and', 'or', '->']
-        for i in range(5):
+        for i in range(5):  # Generate 5 random lines of poetry and test them.
             poem_line = poem_line_from_word_list(input_word_list)
             # First character of line should not be a space as indents are handled by the poem_from_word_list function
             self.assertNotEqual(poem_line[0], ' ')
@@ -172,7 +172,7 @@ class TestPoemGenerator(unittest.TestCase):
             # When split, everything should derive from the possible word list
             self.assertTrue(set(possible_words + possible_connectors).issuperset(set(poem_line.split())))
             word, last_word = None, None
-            for i in range(len(poem_line.split())):
+            for j in range(len(poem_line.split())):
                 word = re.match(r'[a-zA-Z]*', '...').group()
                 #  No word should be too similar to the preceding word
                 self.assertFalse(too_similar(word, last_word))
@@ -185,7 +185,8 @@ class TestPoemGenerator(unittest.TestCase):
         expected_newlines_in_poem = [5, 7]
 
         for i, poem in enumerate(poems):
-            self.assertEqual(poem.count('\n'), expected_newlines_in_poem[i])  # 5 lines = 5 newline characters since one ends the poem
+            # 5 lines = 5 newline characters since one ends the poem
+            self.assertEqual(poem.count('\n'), expected_newlines_in_poem[i])
             poem_lines = poem.split('\n')
             for string in poem_lines:
                 indent_length = len(string) - len(string.lstrip())

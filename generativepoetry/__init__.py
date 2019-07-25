@@ -18,12 +18,12 @@ elif platform.system() == 'Darwin':
     try:
         hobj = hunspell.HunSpell('/Library/Spelling/en_US.dic', '/Library/Spelling/en_US.aff')
     except Exception:
-        raise Exception('This module requires the installation of the hunspell dictionary')
+        raise Exception('This module requires the installation of the hunspell dictionary.')
 else:
     try:
         hobj = hunspell.HunSpell('/usr/share/hunspell/en_US.dic', '/usr/share/hunspell/en_US.aff')
     except Exception:
-        raise Exception('This module requires the installation of the hunspell dictionary')
+        raise Exception('This module requires the installation of the hunspell dictionary.')
 
 def validate_str(input_val, msg='Not a string'):
     """Validate the input argument by checking if it is a string."""

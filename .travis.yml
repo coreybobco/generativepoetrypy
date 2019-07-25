@@ -5,10 +5,8 @@ python:
 dist: bionic
 
 before_install:
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew update          ; fi
-  - if [ "$TRAVIS_OS_NAME" = "osx" ]; then brew install hunspell; fi
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt-get update; fi
-  - if [ "$TRAVIS_OS_NAME" = "linux" ]; then sudo apt install -y libhunspell-dev hunspell-en-us; fi
+  - sudo apt-get update
+  - sudo apt install -y libhunspell-dev hunspell-en-us
 
 install:
   - pip install -r requirements.txt
@@ -16,3 +14,13 @@ install:
 
 script:
   - coverage run --source generativepoetry setup.py test --verbose
+
+after_success:
+  - pip install coveralls; fi
+  - coveralls  # send coverage to coveralls.io
+
+after_script:
+  - coverage report                     # display coverage report on command line
+  - pip install pycodestyle pyflakes
+  - pyflakes . | tee >(wc -l)           # static analysis
+  - pycodestyle --statistics --count .  # static analysis
