@@ -27,6 +27,7 @@ Because this library currently relies on the Python package hunspell, which does
 ##### OSX
 
 OSX users must install hunspell beforehand: `brew install hunspell`
+Then download the en_US dictionary from http://wordlist.aspell.net/dicts/ and unzip it to /Library/Spelling/.
 
 ##### Linux
 
