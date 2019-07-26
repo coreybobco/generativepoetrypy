@@ -264,27 +264,25 @@ def poem_line_from_word_list(word_list, max_line_length=35, connectors=default_c
         connectors (list) -- list of glue strings
     """
     output, last_word = word_list[0], None
-    connector, last_connector = None, None
     for word in word_list[1:]:
         if random.random() < (.2 + len(output)/100):  # Increasing probability of line termination as line gets longer
             break
         if too_similar(last_word, word):
             continue
-        connector_choices = [conn for conn in connectors if conn != last_connector]
-        output += random.choice(connector_choices) + word
-        last_connector = connector
+        connector = random.choice(connectors)
+        if len(output + connector + word) <= max_line_length:
+            output += connector + word
         last_word = word
-        if len(output) >= max_line_length:
-            break
     return output
 
 
-def poem_from_word_list(phonetic_input_word_list, lines=6, limit_line_to_one_input_word=False):
+def poem_from_word_list(phonetic_input_word_list, lines=6, max_line_length=35, limit_line_to_one_input_word=False):
     """Generate a visual poem from a list of words by finding some random phonetically related
 
     Keyword arguments:
         max_line_length (int) -- upper limit on the length of the return value in characters
         connectors (list) -- list of glue strings
+        max_line_length (int) -- upper limit on length of poem lines (excluding line ending punctuation) in characters
         limit_line_to_one_input_word (bool) -- If true, when generating a line of poetry, only use words that are
                                                phonetically related to one input word.
     """
@@ -295,7 +293,8 @@ def poem_from_word_list(phonetic_input_word_list, lines=6, limit_line_to_one_inp
     if limit_line_to_one_input_word:
         for i in range(lines - 1):
             linked_word = random.choice(phonetic_input_word_list)
-            output += poem_line_from_word_list(phonetically_related_words(linked_word), connectors=connectors)
+            output += poem_line_from_word_list(phonetically_related_words(linked_word), connectors=connectors,
+                                               max_line_length=max_line_length)
             line_indent = random.choice(line_indents) if line_indent == '' else \
                 random.choice([li for li in line_indents if li is not line_indent])  # Don't repeat the same indent 2x
             output += random.choice(line_enders) + '\n' + line_indent
@@ -305,7 +304,7 @@ def poem_from_word_list(phonetic_input_word_list, lines=6, limit_line_to_one_inp
             word_list.extend(phonetically_related_words(word))
         for i in range(lines - 1):
             random.shuffle(word_list)
-            output += poem_line_from_word_list(word_list, connectors=connectors)
+            output += poem_line_from_word_list(word_list, connectors=connectors, max_line_length=max_line_length)
             line_indent = random.choice(line_indents) if line_indent == '' else \
                 random.choice([li for li in line_indents if li is not line_indent])   # Don't repeat the same indent 2x
             output += random.choice(line_enders) + '\n'+ line_indent

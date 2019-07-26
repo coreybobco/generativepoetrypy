@@ -164,7 +164,8 @@ class TestPoemGenerator(unittest.TestCase):
         possible_words = self.get_possible_word_list(input_word_list)
         possible_connectors = [',', '...', '&', 'and', 'or', '->']
         for i in range(5):  # Generate 5 random lines of poetry and test them.
-            poem_line = poem_line_from_word_list(input_word_list)
+            max_line_length = 35 + 5 * i
+            poem_line = poem_line_from_word_list(input_word_list, max_line_length=max_line_length)
             # First character of line should not be a space as indents are handled by the poem_from_word_list function
             self.assertNotEqual(poem_line[0], ' ')
             # Should not have newlines as these are handled by the poem_from_word_list function
@@ -177,6 +178,8 @@ class TestPoemGenerator(unittest.TestCase):
                 #  No word should be too similar to the preceding word
                 self.assertFalse(too_similar(word, last_word))
                 last_word = word
+            # Line length should not exceed maximum line length
+            self.assertTrue(len(poem_line) <= max_line_length)
 
     def test_poem_from_word_list(self):
         input_word_list = ['crypt', 'sleep', 'ghost', 'time']
