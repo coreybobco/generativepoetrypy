@@ -10,6 +10,8 @@ Generative Poetry
    :target: https://coveralls.io/github/coreybobco/generativepoetry-py?branch=master
    :alt: Coverage Status
 
+.. image:: https://badge.fury.io/py/generativepoetry.svg
+   :target: https://badge.fury.io/py/generativepoetry
 
 What is this?
 ^^^^^^^^^^^^^
@@ -37,31 +39,27 @@ Installation
 Windows
 """""""
 
-Because this library currently relies on the Python package hunspell, which does not support Windows, use Docker. See below.
+Because this library currently relies on the Python package hunspell, which does not support Windows, use Docker to launch a Linux-based container, then use pip to install, and enter the Python interactive shell within:
+
+.. code-block::
+
+   docker run -t -d python python3 -m pip install generativepoetry && python3
 
 OSX
 """
 
 OSX users must install hunspell beforehand: ``brew install hunspell``
 Then download the en_US dictionary from http://wordlist.aspell.net/dicts/ and unzip it to /Library/Spelling/.
+Then install using pip with ```python3 -m pip install generativepoetry```.
 
 Linux
 """""
 
-Ubuntu/Debian users should install libhunspell-dev beforehand:  ``sudo apt-get install libhunspell-dev``
-
-Docker
-""""""
-
-Use docker-compose to launch a container in which the module is installed and enter the Python interactive shell within.
-
-.. code-block::
-
-   docker-compose build .
-   docker-compose up -d
-   docker-compose run app python
+Ubuntu/Debian users should install hunspell-en-us and libhunspell-dev beforehand:  ``sudo apt-get install hunspell-en-us libhunspell-dev``
+Then install using pip with ```python3 -m pip install generativepoetry```.
 
 Things to try:
+^^^^^^^^^^^^^^
 
 .. code-block::
 
@@ -82,8 +80,8 @@ Things to try:
    similar_meaning_words('vampire', sample_size=8)  # Synonyms and other words with related meanings
    similar_meaning_word('vampire')  # 1 at random
 
-   frequently_intratextually_coappearing_words('metamorphosis', sample_size=10)  # Words that statistically frequently appear in the same text('metamorphosis', sample_size=10)  # Words that statistically frequently appear in the same text
-   frequently_intratextually_coappearing_word('metamorphosis')  # 1 at random
+   contextually_linked_words('metamorphosis', sample_size=10)  # Words that statistically frequently appear in the same text  # Words that statistically frequently appear in the same text
+   contextually_linked_word('metamorphosis')  # 1 at random
 
    print_poem(poem) # Adds a couple newlines around the poem so you can screenshot your creation in the terminal
 

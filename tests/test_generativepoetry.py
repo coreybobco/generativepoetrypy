@@ -100,7 +100,12 @@ class TestWordSampling(unittest.TestCase):
         similar_meaning_to_vampire_words = ['bats', 'bloodsucker', 'clan', 'demon', 'ghoul', 'james', 'kind', 'lamia',
                                             'lycanthrope', 'lycanthropy', 'shane', 'shapeshifter', 'succubus', 'undead',
                                             'vamp', 'vampirism', 'werewolf', 'witch', 'wolfman', 'zombie']
-        self.assertEqual(sorted(similar_meaning_words('vampire', sample_size=None)), similar_meaning_to_vampire_words)
+        results = similar_meaning_words('vampire', sample_size=None)
+        self.assertEqual(len(results), 20)
+        self.assertEqual(sorted(results), similar_meaning_to_vampire_words)
+        results = similar_meaning_words('vampire', sample_size=None, datamuse_api_max=None)
+        self.assertGreater(len(results), 20)
+        self.assertTrue(set(results).issuperset(set(similar_meaning_to_vampire_words)))
         results = similar_meaning_words('vampire', sample_size=6)
         self.assertEqual(len(results), 6)
         self.assertTrue(set(similar_meaning_to_vampire_words).issuperset(set(results)))
@@ -112,25 +117,27 @@ class TestWordSampling(unittest.TestCase):
                                             'vamp', 'vampirism', 'werewolf', 'witch', 'wolfman', 'zombie']
         self.assertIn(similar_meaning_word('vampire'), similar_meaning_to_vampire_words)
 
-    def test_frequently_intratextually_coappearing_words(self):
-        self.assertEqual(frequently_intratextually_coappearing_words('nonexistentword'), [])
-        intratextually_associated_w_metamorphosis = ['budding', 'cocoon', 'duff', 'frogs', 'gills', 'hatching',
-                                                     'juvenile', 'kafka', 'lamprey', 'larva', 'metamorphose',
-                                                     'narcissus', 'nymph', 'polyp', 'polyps', 'pupa', 'pupal',
-                                                     'salamander', 'starfish', 'tadpole']
-        self.assertEqual(sorted(frequently_intratextually_coappearing_words('metamorphosis', sample_size=None)),
-                         intratextually_associated_w_metamorphosis)
-        results = frequently_intratextually_coappearing_words('metamorphosis', sample_size=6)
+    def test_contextually_linked_words(self):
+        self.assertEqual(contextually_linked_words('nonexistentword'), [])
+        contextually_linked_to_metamorphosis = ['budding', 'cocoon', 'duff', 'frogs', 'gills', 'hatching', 'juvenile',
+                                                'kafka', 'lamprey', 'larva', 'metamorphose', 'narcissus', 'nymph',
+                                                'polyp', 'polyps', 'pupa', 'pupal', 'salamander', 'starfish', 'tadpole']
+        results = contextually_linked_words('metamorphosis', sample_size=None)
+        self.assertEqual(len(results), 20)
+        self.assertEqual(sorted(results), contextually_linked_to_metamorphosis)
+        results = contextually_linked_words('metamorphosis', sample_size=None, datamuse_api_max=None)
+        self.assertGreater(len(results), 20)
+        self.assertTrue(set(results).issuperset(set(contextually_linked_to_metamorphosis)))
+        results = contextually_linked_words('metamorphosis', sample_size=6)
         self.assertEqual(len(results), 6)
-        self.assertTrue(set(intratextually_associated_w_metamorphosis).issuperset(set(results)))
+        self.assertTrue(set(contextually_linked_to_metamorphosis).issuperset(set(results)))
 
-    def test_frequently_intratextually_coappearing_word(self):
-        self.assertIsNone(frequently_intratextually_coappearing_word('nonexistentword'))
-        intratextually_associated_w_metamorphosis = ['budding', 'cocoon', 'duff', 'frogs', 'gills', 'hatching',
-                                                     'juvenile', 'kafka', 'lamprey', 'larva', 'metamorphose',
-                                                     'narcissus', 'nymph', 'polyp', 'polyps', 'pupa', 'pupal',
-                                                     'salamander', 'starfish', 'tadpole']
-        self.assertIn(frequently_intratextually_coappearing_word('metamorphosis'), intratextually_associated_w_metamorphosis)
+    def test_contextually_linked_word(self):
+        self.assertIsNone(contextually_linked_word('nonexistentword'))
+        contextually_linked_to_metamorphosis = ['budding', 'cocoon', 'duff', 'frogs', 'gills', 'hatching', 'juvenile',
+                                                'kafka', 'lamprey', 'larva', 'metamorphose', 'narcissus', 'nymph',
+                                                'polyp', 'polyps', 'pupa', 'pupal', 'salamander', 'starfish', 'tadpole']
+        self.assertIn(contextually_linked_word('metamorphosis'), contextually_linked_to_metamorphosis)
 
     def test_phonetically_related_words(self):
         self.assertRaises(ValueError, lambda: phonetically_related_words(2))

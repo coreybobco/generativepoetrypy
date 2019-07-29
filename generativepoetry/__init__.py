@@ -187,7 +187,7 @@ def similar_meaning_words(input_word, sample_size=6, datamuse_api_max=20):
                                   both the sample pool and the sample size.
     """
     validate_word(input_word)
-    response = api.words(ml=input_word, max=datamuse_api_max) if datamuse_api_max else api.words(sl=input_word)
+    response = api.words(ml=input_word, max=datamuse_api_max) if datamuse_api_max else api.words(ml=input_word)
     word_list = filter_word_list([obj['word'] for obj in response], spellcheck=False)
     return extract_sample(word_list, sample_size=sample_size)
 
@@ -203,7 +203,7 @@ def similar_meaning_word(input_word, datamuse_api_max=10):
     return next(iter(similar_meaning_words(input_word, sample_size=1, datamuse_api_max=datamuse_api_max)), None)
 
 
-def frequently_intratextually_coappearing_words(input_word, sample_size=6, datamuse_api_max=20):
+def contextually_linked_words(input_word, sample_size=6, datamuse_api_max=20):
     """Return a list of words that frequently appear within the same document as a given word, in randomized order,
     if at least one can be found using the Datamuse API.
 
@@ -216,12 +216,12 @@ def frequently_intratextually_coappearing_words(input_word, sample_size=6, datam
                                   size of both the sample pool and the sample size.
     """
     validate_word(input_word)
-    response = api.words(rel_trg=input_word, max=datamuse_api_max) if datamuse_api_max else api.words(sl=input_word)
+    response = api.words(rel_trg=input_word, max=datamuse_api_max) if datamuse_api_max else api.words(rel_trg=input_word)
     word_list = filter_word_list([obj['word'] for obj in response], spellcheck=False)  # Spellcheck removes proper nouns
     return extract_sample(word_list, sample_size=sample_size)
 
 
-def frequently_intratextually_coappearing_word(input_word, datamuse_api_max=10):
+def contextually_linked_word(input_word, datamuse_api_max=10):
     """Return a random word that frequently appear within the same document as a given word if at least one can be found
     using the Datamuse API.
 
@@ -230,7 +230,7 @@ def frequently_intratextually_coappearing_word(input_word, datamuse_api_max=10):
                                   always sorted from most to least similar sounding (according to a numeric score
                                   provided by Datamuse).
     """
-    return next(iter(frequently_intratextually_coappearing_words(input_word, sample_size=1,
+    return next(iter(contextually_linked_words(input_word, sample_size=1,
                                                                 datamuse_api_max=datamuse_api_max)), None)
 
 
