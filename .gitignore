@@ -20,3 +20,6 @@ develop-eggs
 .installed.cfg
 lib
 lib64
+
+# Pypi
+testpypi

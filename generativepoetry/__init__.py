@@ -143,7 +143,7 @@ def extract_sample(word_list, sample_size=None):
         return sample
 
 
-def similar_sounding_words(input_word, sample_size=6, datamuse_api_max=50):
+def similar_sounding_words(input_word, sample_size=6, datamuse_api_max=20):
     """Return a list of similar sounding words to a given word, in randomized order, if at least one can be found using
     Datamuse API.
 
@@ -163,7 +163,7 @@ def similar_sounding_words(input_word, sample_size=6, datamuse_api_max=50):
     return extract_sample(word_list, sample_size=sample_size)
 
 
-def similar_sounding_word(input_word, datamuse_api_max=15):
+def similar_sounding_word(input_word, datamuse_api_max=20):
     """Return a random similar sounding word for a given word if at least one can be found using the Datamuse API.
 
     Keyword arguments:
@@ -180,7 +180,7 @@ def similar_meaning_words(input_word, sample_size=6, datamuse_api_max=20):
 
     Keyword arguments:
         sample_size (int) -- If provided, return a random sample of this many elements. If this number is greater than
-                            the length of the rhyme list, then just return a shuffled copy of the rhyme list.
+                             the length of the API results, then just return a shuffled copy of the API results.
         datamuse_api_max (int) -- specifies the maximum number of results returned by the API. The API client's
                                   results are always sorted from most to least similar meaning (according to a numeric
                                   score provided by Datamuse), hence by using both kwargs, one can control the size of
@@ -209,7 +209,7 @@ def contextually_linked_words(input_word, sample_size=6, datamuse_api_max=20):
 
     Keyword arguments:
         sample_size (int) -- If provided, return a random sample of this many elements. If this number is greater than
-                            the length of the rhyme list, then just return a shuffled copy of the rhyme list.
+                             the length of the API results, then just return a shuffled copy of the API results.
         datamuse_api_max (int) -- specifies the maximum number of results returned by the API. The API client's
                                   results are always sorted from most to least frequently coappearing (according to a
                                   numeric score provided by Datamuse), hence by using both kwargs, one can control the
@@ -234,12 +234,14 @@ def contextually_linked_word(input_word, datamuse_api_max=10):
                                                                 datamuse_api_max=datamuse_api_max)), None)
 
 
-def phonetically_related_words(input_val, sample_size=None):
+def phonetically_related_words(input_val, sample_size=None, datamuse_api_max=20):
     """Get a list of rhymes and similar sounding words to a word or list of words.
 
-    sample_size (int) -- If provided, return a random sample of this many elements. If this number is greater than
-                         the length of the rhyme list, then just return a shuffled copy of the phonetically related
-                         word list.
+    sample_size (int) -- If provided, pass this argument to the functions rhymes and similar_sounding_words so that
+                         twice this number of elements are returned by this function. If not provided, the function
+                         will return all rhymes plus however many API results similar_sounding_words.
+    datamuse_api_max -- specifies how many API results can be returned by the API client when fetching similar
+                        meaning words.
     """
     if isinstance(input_val, str):
         input_words = [input_val]
@@ -252,7 +254,8 @@ def phonetically_related_words(input_val, sample_size=None):
     pr_words = []
     for word in input_words:
         pr_words.extend(rhymes(word, sample_size=sample_size))
-        pr_words.extend(w for w in similar_sounding_words(word, sample_size=sample_size)
+        pr_words.extend(w for w in similar_sounding_words(word, sample_size=sample_size,
+                                                          datamuse_api_max=datamuse_api_max)
                         if w not in pr_words)  # eliminate overlap
         if sample_size and sample_size - 1 < len(pr_words):
             pr_words = random.sample(pr_words, k=sample_size)
@@ -291,8 +294,6 @@ def poem_from_word_list(phonetic_input_word_list, lines=6, max_line_length=35, l
                                                phonetically related to one input word.
     """
     connectors = [' ', '   ', '...   ', random.choice([' & ', ' and ']), '  or  ', ' or ']
-    if random.random() > .7:
-        connectors.append(' -> ')
     output, line_indent = '', ''
     if limit_line_to_one_input_word:
         for i in range(lines - 1):

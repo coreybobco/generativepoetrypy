@@ -20,7 +20,7 @@ This is primarily a library for procedurally generating `concrete poetry <https:
 
 When provided a list of input words, a poem is generated using these words plus a broader group of words that are phonetically related to the list of input words. The words are joined by conjunctions and punctuation that is generally agnostic as to the surrounding word's part of speech, and spacing and indentation is randomized to emulate the characteristics visual poetry.
 
-Using the `Datamuse API <https://pypi.org/project/python-datamuse/>`_ and a rhyme dictionary, this library also can find rhymes, similar sounding words, similar meaning words, or intratextually statistically associated words (i.e. words that appears a lot within documents also containing word X). Because the sources return many extremely archaic words as well as abbreviations, some words are also filtered out.
+Using the `Datamuse API <https://pypi.org/project/python-datamuse/>`_ and a rhyme dictionary, this library also can find one or several rhymes, similar sounding words, similar meaning words, or intratextually statistically associated words (i.e. words that appears a lot within documents also containing word X). Because the sources return many extremely archaic words as well as abbreviations, some words are also filtered out. It allows for control of random sampling by both letting you choose the sample population size (# of API results returned, which are always returned by order of relevancy) and the sample size against that population.
 
 Consequently, this library requires an internet connection to work properly.
 
@@ -50,54 +50,83 @@ OSX
 
 OSX users must install hunspell beforehand: ``brew install hunspell``
 Then download the en_US dictionary from http://wordlist.aspell.net/dicts/ and unzip it to /Library/Spelling/.
-Then install using pip with ```python3 -m pip install generativepoetry```.
+Then install using pip with:
+
+.. code-block::
+
+   python3 -m pip install generativepoetry
 
 Linux
 """""
 
 Ubuntu/Debian users should install hunspell-en-us and libhunspell-dev beforehand:  ``sudo apt-get install hunspell-en-us libhunspell-dev``
-Then install using pip with ```python3 -m pip install generativepoetry```.
+Then install using pip with:
+
+.. code-block::
+
+   python3 -m pip install generativepoetry
 
 Things to try:
 ^^^^^^^^^^^^^^
 
 .. code-block::
 
-   from utils import *
-   # When sample_size is not provided, all results are returned.
-   rhymes('cool', sample_size=6)  # 6 random rhymes with cool, defaults to all rhymes
-   ['ghoul', 'misrule', 'drool', 'rule', 'uncool', 'spool']
-   rhyme('cool')  # 1 at random
+   from generativepoetry import *
 
-   similar_sounding_words('cool', sample_size=6) # 6 random non-rhymes that sound similar to cool
-   ['cowl', 'coal', 'coil', 'call', 'keel', 'kale']
-   similar_sounding_word('cool')  # 1 at random
-
-   phonetically_related_words('slimy')
-   ['grimy', 'stymie', 'slammed', 'slammer', 'slim', 'seamy', 'slimy', 'slams', 'slime', 'slam', 'samey', 'semi', 'salami']
-   phonetically_related_words(['word', 'list'])  # Lists also work as input
-
-   similar_meaning_words('vampire', sample_size=8)  # Synonyms and other words with related meanings
-   similar_meaning_word('vampire')  # 1 at random
-
-   contextually_linked_words('metamorphosis', sample_size=10)  # Words that statistically frequently appear in the same text  # Words that statistically frequently appear in the same text
-   contextually_linked_word('metamorphosis')  # 1 at random
-
-   print_poem(poem) # Adds a couple newlines around the poem so you can screenshot your creation in the terminal
-
-   print(poem_from_word_list(['crypt', 'lost', 'ghost', 'time']))
-   laced kept crypts  or  corrupt...   toast?
-   embossed & most...   corrupt  or  ripped!
-   riposte...   glossed
-           lawsuit!
-   toast -> tame
-       groped & team
-           kept.
-   lawsuit -> glossed cast toast
-           rhyme.
-   ghost time
-
-   # Other options
-   print(poem_from_word_list(['crypt', 'lost', 'ghost', 'time'], lines=3))  # Control the number of lines (defaults to 6)
+   # Writing a Poem
+   # The print_poem functions adds some newlines to make screenshotting easier for sharing, but is optional. You can
+   # just use Python's native print function too.
+   # Poem from word list requires a list of words--for non-programmers that means the list must have brackets and
+   # each word must be surrounded by strings. I find using at least six words to be create more dynamic and
+   # interesting results using the same poem 'recipe.'
+   print_poem(poem_from_word_list(['crypt', 'lost', 'ghost', 'time', 'raven', 'ether']))
+   # You can also control the number of lines and their width with the lines and max_line_length_arguments.
+   # Lines defaults to 6 and max_line_length defaults to 35 characters (excluding line-ending punctuation/conjunctions).
+   print_poem(poem_from_word_list(['crypt', 'lost', 'ghost', 'time', 'raven', 'ether'], lines=9, max_line_length=25))
    # The following option makes it so each line uses only the phonetically related words of one input word
    print(poem_from_word_list(['crypt', 'lost', 'ghost', 'time'], link_line_to_input_word=True))
+
+   # Rhymes
+   rhymes('cool')  # all words that rhyme with cool
+   rhymes('cool', sample_size=6)  # 6 random words that rhyme with cool
+   rhyme('cool')  # 1 at random
+
+   # Similar sounding words -- A similar sounding word is a word that does not rhyme with a word but sounds similar.
+   # To get all of the similar sounding words according to Project Datamuse:
+   similar_sounding_word('cool', sample_size=None, datamuse_api_max=None)
+   # To get the top 10 similar sounding words and then randomly select 5 from that:
+   similar_sounding_words('cool', sample_size=5, datamuse_api_max=10)
+   # When not provided, sample_size defaults to 6, and datamuse_api_max defaults to 20.
+   # The same arguments can be optionally supplied to similar_sounding_word, which draws one word at random:
+   similar_sounding_word('cool', sample_size=3, datamuse_api_max=15)
+   similar_sounding_word('cool')
+
+   # Phonetically related words -- all of the rhymes and similar sounding words for a word or for a list of words
+   # It optionally accepts sample_size and datamuse_api_max to help the user control random sampling as above.
+   # Note that datamuse_api_max will only be used to control the number of similar meaning words initially fetched
+   # by the Datamuse API however.
+   phonetically_related_words('slimy')
+   phonetically_related_words('slimy', sample_size=5, datamuse_api_max=15)
+   phonetically_related_words(['word', 'list'])
+   phonetically_related_words(['word', 'list'], sample_size=5, datamuse_api_max=15)
+
+   # Similar meaning words -- These include but aren't limited to synonyms; for example, spatula counts for spoon.
+   # To get all of the similar sounding words according to Project Datamuse:
+   similar_meaning_words('vampire', sample_size=None, datamuse_api_max=None)
+   # To get the top 10 similar sounding words and then randomly select 5 from that:
+   similar_meaning_words('vampire', sample_size=5, datamuse_api_max=10)
+   # When not provided, sample_size defaults to 6, and datamuse_api_max defaults to 20.
+   # The same arguments can be optionally supplied to similar_meaning_word, which draws one word at random:
+   similar_meaning_word('vampire', sample_size=8, datamuse_api_max=12)
+   similar_meaning_word('vampire')
+
+   # Contextually linked words -- These are words that are often found in the same documents as a given word but don't
+   #                              necessarily have a related meaning. For example, metamorphosis and Kafka.
+   # To get all of the contextually linked words according to Project Datamuse:
+   contextually_linked_words('metamorphosis', sample_size=None, datamuse_api_max=None)
+   # To get the top 10 contextually linked words and then randomly select 5 from that:
+   contextually_linked_words('metamorphosis', sample_size=5, datamuse_api_max=10)
+   # When not provided, sample_size defaults to 6, and datamuse_api_max defaults to 20.
+   # The same arguments can be optionally supplied to contextually_linked_word, which draws one word at random:
+   contextually_linked_word('metamorphosis', sample_size=8, datamuse_api_max=12)
+   contextually_linked_word('metamorphosis')
