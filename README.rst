@@ -48,7 +48,11 @@ Because this library currently relies on the Python package hunspell, which does
 OSX
 """
 
-OSX users must install hunspell beforehand: ``brew install hunspell``
+OSX users must install hunspell beforehand:
+
+.. code-block::
+   brew install hunspell
+
 Then download the en_US dictionary from http://wordlist.aspell.net/dicts/ and unzip it to /Library/Spelling/.
 Then install using pip with:
 
@@ -59,7 +63,11 @@ Then install using pip with:
 Linux
 """""
 
-Ubuntu/Debian users should install hunspell-en-us and libhunspell-dev beforehand:  ``sudo apt-get install hunspell-en-us libhunspell-dev``
+Ubuntu/Debian users should install hunspell-en-us and libhunspell-dev beforehand:
+
+.. code-block::
+   sudo apt-get install hunspell-en-us libhunspell-dev``
+
 Then install using pip with:
 
 .. code-block::
@@ -71,6 +79,7 @@ Things to try:
 
 .. code-block::
 
+   # Import the module's functions first.
    from generativepoetry import *
 
    # Writing a Poem
