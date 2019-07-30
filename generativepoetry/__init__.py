@@ -128,8 +128,8 @@ def extract_sample(word_list, sample_size=None):
     """Returns a random sample from the word list or a shuffled copy of the word list.
 
     Keyword arguments:
-        sample size (int)-- If this number is greater than the length of the rhyme list, then just return a shuffled
-        copy of the rhyme list.
+        sample size (int)-- If this number is greater than the length of the word list, then just return a shuffled
+        copy of the word list.
     """
     if not sample_size or len(word_list) <= sample_size:
         return random.sample(word_list, k=len(word_list))
@@ -149,7 +149,8 @@ def similar_sounding_words(input_word, sample_size=6, datamuse_api_max=20):
 
     Keyword arguments:
         sample_size (int) -- If provided, return a random sample of this many elements. If this number is greater than
-                            the length of the rhyme list, then just return a shuffled copy of the rhyme list.
+                             the length of the API results, then just return a shuffled copy of the filtered API
+                             results.
         datamuse_api_max (int) -- specifies the maximum number of results returned by the API. The API client's
                                   results are always sorted from most to least similar sounding (according to a numeric
                                   score provided by Datamuse), hence by using both kwargs, one can control the size of
@@ -180,7 +181,8 @@ def similar_meaning_words(input_word, sample_size=6, datamuse_api_max=20):
 
     Keyword arguments:
         sample_size (int) -- If provided, return a random sample of this many elements. If this number is greater than
-                             the length of the API results, then just return a shuffled copy of the API results.
+                             the length of the API results, then just return a shuffled copy of the filtered API
+                             results.
         datamuse_api_max (int) -- specifies the maximum number of results returned by the API. The API client's
                                   results are always sorted from most to least similar meaning (according to a numeric
                                   score provided by Datamuse), hence by using both kwargs, one can control the size of
@@ -209,7 +211,8 @@ def contextually_linked_words(input_word, sample_size=6, datamuse_api_max=20):
 
     Keyword arguments:
         sample_size (int) -- If provided, return a random sample of this many elements. If this number is greater than
-                             the length of the API results, then just return a shuffled copy of the API results.
+                             the length of the API results, then just return a shuffled copy of the filtered API
+                             results.
         datamuse_api_max (int) -- specifies the maximum number of results returned by the API. The API client's
                                   results are always sorted from most to least frequently coappearing (according to a
                                   numeric score provided by Datamuse), hence by using both kwargs, one can control the
