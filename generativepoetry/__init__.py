@@ -143,7 +143,7 @@ def extract_sample(word_list, sample_size=None):
         return sample
 
 
-def similar_sounding_words(input_word, sample_size=6, datamuse_api_max=20):
+def similar_sounding_words(input_word, sample_size=6, datamuse_api_max=50):
     """Return a list of similar sounding words to a given word, in randomized order, if at least one can be found using
     Datamuse API.
 
@@ -233,11 +233,10 @@ def contextually_linked_word(input_word, datamuse_api_max=10):
                                   always sorted from most to least similar sounding (according to a numeric score
                                   provided by Datamuse).
     """
-    return next(iter(contextually_linked_words(input_word, sample_size=1,
-                                                                datamuse_api_max=datamuse_api_max)), None)
+    return next(iter(contextually_linked_words(input_word, sample_size=1, datamuse_api_max=datamuse_api_max)), None)
 
 
-def phonetically_related_words(input_val, sample_size=None, datamuse_api_max=20):
+def phonetically_related_words(input_val, sample_size=None, datamuse_api_max=50):
     """Get a list of rhymes and similar sounding words to a word or list of words.
 
     sample_size (int) -- If provided, pass this argument to the functions rhymes and similar_sounding_words so that
