@@ -33,6 +33,10 @@ When reading these procedurally generated poems, it is easy to suspend one's dis
 
 In this sense, these poems are similar to abstract paintings in which paint is thrown onto the canvas, or to a Rorschach test. They are, for the most part, suggestive optical illusions, engineered by chance and a choice palette of paints or words.
 
+By way of example, here are five concrete poems from the same recipe I collaged together using the same 'recipe': the words 'paranoid', 'marinate', 'hysteria', 'radio', 'waves', and 'reverie']) * 5)
+
+.. image:: example.png
+
 Installation
 ^^^^^^^^^^^^
 
