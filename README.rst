@@ -33,7 +33,7 @@ When reading these procedurally generated poems, it is easy to suspend one's dis
 
 In this sense, these poems are similar to abstract paintings in which paint is thrown onto the canvas, or to a Rorschach test. They are, for the most part, suggestive optical illusions, engineered by chance and a choice palette of paints or words.
 
-By way of example, here are five concrete poems from the same recipe I collaged together using the same 'recipe': the words 'paranoid', 'marinate', 'hysteria', 'radio', 'waves', and 'reverie']) * 5)
+By way of example, here are five concrete poems from the same recipe I collaged together using the same *recipe*: the words *paranoid*, *marinate*, *hysteria*, *radio*, *waves*, and *reverie*.
 
 .. image:: example.png
 
@@ -90,7 +90,7 @@ Things to try:
 
 Writing a Poem
 """"""""""""""
-Poem from word list requires a list of words--for non-programmers that means the list must have brackets, and each word must be surrounded by strings. I find using at least six words to be create more dynamic and interesting results using the same poem 'recipe.'
+Poem from word list requires a list of words--for non-programmers that means the list must have brackets, and each word must be surrounded by strings. I find using at least six words to be create more dynamic and interesting results using the same poem *recipe*.
 
 .. code-block::
 

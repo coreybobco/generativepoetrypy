@@ -9,3 +9,4 @@ All notable changes to this project will be documented in this file.
 - Fixed bug where wrong results were being returned when datamuse_api_max set to None.
 - Added datamuse_api_max option to phonetically_related_words function.
 - Defined public api with __all___.
+- Added example image to readme.
