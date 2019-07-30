@@ -1,5 +1,8 @@
+import re
 import unittest
 from generativepoetry import *
+from generativepoetry import validate_str, validate_str_list, has_invalid_characters, validate_word, too_similar, \
+                             filter_word, filter_word_list, extract_sample
 
 
 class TestValidationAndFilters(unittest.TestCase):

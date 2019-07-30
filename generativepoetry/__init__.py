@@ -10,6 +10,10 @@ __author__ = 'Corey Bobco'
 __email__ = 'corey.bobco@gmail.com'
 __version__ = '0.1.0'
 
+__all__ = ['rhymes', 'rhyme', 'similar_sounding_word', 'similar_sounding_words', 'similar_meaning_word',
+           'similar_meaning_words', 'contextually_linked_word', 'contextually_linked_words',
+           'phonetically_related_words', 'poem_line_from_word_list', 'poem_from_word_list', 'print_poem']
+
 api = datamuse.Datamuse()
 default_connectors = [' ', '   ', '...   ', random.choice([' & ', ' and ']), '  or  ', ' or ']
 line_enders = ['.', ', ', '!', '?', '', ' or', '...']

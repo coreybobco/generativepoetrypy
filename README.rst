@@ -84,25 +84,37 @@ Things to try:
    # Import the module's functions first.
    from generativepoetry import *
 
-   # Writing a Poem
-   # The print_poem functions adds some newlines to make screenshotting easier for sharing, but is optional. You can
-   # just use Python's native print function too.
-   # Poem from word list requires a list of words--for non-programmers that means the list must have brackets and
-   # each word must be surrounded by strings. I find using at least six words to be create more dynamic and
-   # interesting results using the same poem 'recipe.'
+Writing a Poem
+""""""""""""""
+Poem from word list requires a list of words--for non-programmers that means the list must have brackets, and each word must be surrounded by strings. I find using at least six words to be create more dynamic and interesting results using the same poem 'recipe.'
+
+.. code-block::
+
+   # Print_poem just prints newlines before and after the poem so you can also use Python's print function.
    print_poem(poem_from_word_list(['crypt', 'lost', 'ghost', 'time', 'raven', 'ether']))
    # You can also control the number of lines and their width with the lines and max_line_length_arguments.
-   # Lines defaults to 6 and max_line_length defaults to 35 characters (excluding line-ending punctuation/conjunctions).
-   print_poem(poem_from_word_list(['crypt', 'lost', 'ghost', 'time', 'raven', 'ether'], lines=9, max_line_length=25))
+   # Lines defaults to 6 and max_line_length defaults to 35 characters, excluding line-ending punctuation
+   # or conjunctions.
+   print_poem(poem_from_word_list(['crypt', 'lost', 'ghost', 'time'], lines=9, max_line_length=25))
    # The following option makes it so each line uses only the phonetically related words of one input word
    print(poem_from_word_list(['crypt', 'lost', 'ghost', 'time'], link_line_to_input_word=True))
 
-   # Rhymes
+Rhymes
+""""""
+
+.. code-block::
+
    rhymes('cool')  # all words that rhyme with cool
    rhymes('cool', sample_size=6)  # 6 random words that rhyme with cool
    rhyme('cool')  # 1 at random
 
-   # Similar sounding words -- A similar sounding word is a word that does not rhyme with a word but sounds similar.
+Similar sounding words
+""""""""""""""""""""""
+
+A similar sounding word is a word that does not rhyme with a word but sounds similar.
+
+.. code-block::
+
    # To get all of the similar sounding words according to Project Datamuse:
    similar_sounding_word('cool', sample_size=None, datamuse_api_max=None)
    # To get the top 10 similar sounding words and then randomly select 5 from that:
@@ -112,16 +124,26 @@ Things to try:
    similar_sounding_word('cool', sample_size=3, datamuse_api_max=15)
    similar_sounding_word('cool')
 
-   # Phonetically related words -- all of the rhymes and similar sounding words for a word or for a list of words
-   # It optionally accepts sample_size and datamuse_api_max to help the user control random sampling as above.
-   # Note that datamuse_api_max will only be used to control the number of similar meaning words initially fetched
-   # by the Datamuse API however.
+Phonetically related words
+""""""""""""""""""""""""""
+Phonetically related words are all of the rhymes and similar sounding words for a word or for a list of words
+
+.. code-block::
+
+   # It optionally accepts sample_size and datamuse_api_max to help the user control random sampling.
+   # Note that datamuse_api_max will only be used to control the number of similar meaning words
+   # initially fetched by the Datamuse API, however.
    phonetically_related_words('slimy')
    phonetically_related_words('slimy', sample_size=5, datamuse_api_max=15)
    phonetically_related_words(['word', 'list'])
    phonetically_related_words(['word', 'list'], sample_size=5, datamuse_api_max=15)
 
-   # Similar meaning words -- These include but aren't limited to synonyms; for example, spatula counts for spoon.
+Similar meaning words
+"""""""""""""""""""""
+These include but aren't limited to synonyms; for example, spatula counts for spoon.
+
+.. code-block::
+
    # To get all of the similar sounding words according to Project Datamuse:
    similar_meaning_words('vampire', sample_size=None, datamuse_api_max=None)
    # To get the top 10 similar sounding words and then randomly select 5 from that:
@@ -131,8 +153,13 @@ Things to try:
    similar_meaning_word('vampire', sample_size=8, datamuse_api_max=12)
    similar_meaning_word('vampire')
 
-   # Contextually linked words -- These are words that are often found in the same documents as a given word but don't
-   #                              necessarily have a related meaning. For example, metamorphosis and Kafka.
+Contextually linked words
+"""""""""""""""""""""""""
+
+These are words that are often found in the same documents as a given word but don't necessarily have a related meaning. For example, metamorphosis and Kafka.
+
+.. code-block::
+
    # To get all of the contextually linked words according to Project Datamuse:
    contextually_linked_words('metamorphosis', sample_size=None, datamuse_api_max=None)
    # To get the top 10 contextually linked words and then randomly select 5 from that:

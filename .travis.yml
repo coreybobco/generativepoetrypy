@@ -23,4 +23,4 @@ after_script:
   - coverage report                     # display coverage report on command line
   - pip install pycodestyle pyflakes
   - pyflakes . | tee >(wc -l)           # static analysis
-  - pycodestyle --statistics --count .  # static analysis
+  - pycodestyle --max-line-length=120 --statistics --count .  # static analysis
