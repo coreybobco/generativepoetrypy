@@ -172,3 +172,19 @@ These are words that are often found in the same documents as a given word but d
    # The same arguments can be optionally supplied to contextually_linked_word, which draws one word at random:
    contextually_linked_word('metamorphosis', sample_size=8, datamuse_api_max=12)
    contextually_linked_word('metamorphosis')
+
+Related rare words
+""""""""""""""""""
+
+Finds a random sample of the rarest words that are related to a given input word, either phonetically, contextually, or by meaning.
+
+.. code-block::
+
+   # To get all of the related words to a given word:
+   related_rare_words('spherical', sample_size=None, rare_word_population_max=None)
+   # To get the top 10 rarest words and then randomly select 5 from that:
+   related_rare_words('spherical', sample_size=5, rare_word_population_max=16)
+   # When not provided, sample_size defaults to 8, and rare_word_population_max defaults to 20.
+   # The same arguments can be optionally supplied to contextually_linked_word, which draws one word at random:
+   related_rare_word('spherical', sample_size=8, rare_word_population_max=12)
+   related_rare_word('spherical')

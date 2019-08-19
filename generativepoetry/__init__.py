@@ -8,11 +8,12 @@ import platform
 
 __author__ = 'Corey Bobco'
 __email__ = 'corey.bobco@gmail.com'
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 
 __all__ = ['rhymes', 'rhyme', 'similar_sounding_word', 'similar_sounding_words', 'similar_meaning_word',
-           'similar_meaning_words', 'contextually_linked_word', 'contextually_linked_words',
-           'phonetically_related_words', 'poem_line_from_word_list', 'poem_from_word_list', 'print_poem']
+           'similar_meaning_words', 'contextually_linked_word', 'contextually_linked_words', 'related_rare_words',
+           'related_rare_word', 'phonetically_related_words', 'poem_line_from_word_list', 'poem_from_word_list',
+           'print_poem']
 
 api = datamuse.Datamuse()
 default_connectors = [' ', '   ', '...   ', random.choice([' & ', ' and ']), '  or  ', ' or ']
@@ -69,6 +70,8 @@ def too_similar(word1, word2):
         return True
     if word1 + 's' == word2 or word2 + 's' == word1:
         return True
+    if word1 + 'ly' == word2 or word2 + 'ly' == word1:
+        return True
     return False
 
 
@@ -103,6 +106,14 @@ def filter_word_list(word_list, spellcheck=True):
         )
     )
     return word_list
+
+def sort_by_rarity(word_list):
+    if len(word_list) <= 1:
+        return word_list
+    return sort_by_rarity(
+        [word for word in word_list[1:] if word_frequency(word, 'en') < word_frequency(word_list[0], 'en')]
+    ) + [word_list[0]] + \
+    sort_by_rarity([word for word in word_list[1:] if word_frequency(word, 'en') >= word_frequency(word_list[0], 'en')])
 
 def rhymes(word, sample_size=None):
     """Return a list of rhymes in randomized order for a given word if at least one can be found using the pronouncing
@@ -238,6 +249,35 @@ def contextually_linked_word(input_word, datamuse_api_max=10):
                                   provided by Datamuse).
     """
     return next(iter(contextually_linked_words(input_word, sample_size=1, datamuse_api_max=datamuse_api_max)), None)
+
+
+def related_rare_words(input_word, sample_size=8, rare_word_population_max=20):
+    """Return a random sample of rare related words to a given word. The words can be related phonetically,
+    contextually, or by meaning).
+
+    Keyword arguments:
+        sample_size (int) -- If provided, return a random sample of this many elements. If this number is greater than
+                             the length of rare word population size, then just return a shuffled copy of that.
+        rare_word_population_max (int) -- specifies the maximum number of related words to subsample from. The rare word
+                                          population is sorted from rarest to most common.
+    """
+    related_words = phonetically_related_words(input_word) + \
+                    contextually_linked_words(input_word, sample_size=None, datamuse_api_max=100) + \
+                    similar_meaning_words(input_word, sample_size=None, datamuse_api_max=100)
+    related_words = [word for word in related_words if not too_similar(input_word, word)]
+    return extract_sample(sort_by_rarity(related_words)[:rare_word_population_max], sample_size=sample_size)
+
+
+def related_rare_word(input_word, rare_word_population_max=10):
+    """Return a random rare related word to a given word. The word can be related phonetically, contextually, or by
+    meaning).
+
+    Keyword arguments:
+        rare_word_population_max (int) -- specifies the maximum number of related words to subsample from. The rare word
+                                          population is sorted from rarest to most common.
+    """
+    return next(iter(related_rare_words(input_word, sample_size=1,
+                                        rare_word_population_max=rare_word_population_max)), None)
 
 
 def phonetically_related_words(input_val, sample_size=None, datamuse_api_max=50):

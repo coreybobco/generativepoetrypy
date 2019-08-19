@@ -2,7 +2,7 @@ import re
 import unittest
 from generativepoetry import *
 from generativepoetry import validate_str, validate_str_list, has_invalid_characters, validate_word, too_similar, \
-                             filter_word, filter_word_list, extract_sample
+                             filter_word, filter_word_list, extract_sample, sort_by_rarity
 
 
 class TestValidationAndFilters(unittest.TestCase):
@@ -137,9 +137,8 @@ class TestWordSampling(unittest.TestCase):
 
     def test_contextually_linked_word(self):
         self.assertIsNone(contextually_linked_word('nonexistentword'))
-        contextually_linked_to_metamorphosis = ['budding', 'cocoon', 'duff', 'frogs', 'gills', 'hatching', 'juvenile',
-                                                'kafka', 'lamprey', 'larva', 'metamorphose', 'narcissus', 'nymph',
-                                                'polyp', 'polyps', 'pupa', 'pupal', 'salamander', 'starfish', 'tadpole']
+        contextually_linked_to_metamorphosis = ['kafka', 'lamprey', 'larva', 'metamorphose', 'narcissus', 'polyp',
+                                                'polyps', 'pupa', 'pupal', 'tadpole']
         self.assertIn(contextually_linked_word('metamorphosis'), contextually_linked_to_metamorphosis)
 
     def test_phonetically_related_words(self):
@@ -158,6 +157,33 @@ class TestWordSampling(unittest.TestCase):
                                    ['eon', 'gnawing', 'knowing', 'kneeing', 'naan', 'non', 'noun'])
         self.assertEqual(sorted(phonetically_related_words(['poet', 'neon'], sample_size=None)), expected_pr_words)
 
+    def test_sort_by_rarity(self):
+        unsorted_words = ['cat', 'catabasis', 'hue', 'corncob',  'the', 'Catalan', 'errant']
+        correctly_sorted_words = ['catabasis', 'corncob', 'errant', 'hue', 'Catalan', 'cat', 'the']
+        self.assertEqual(sort_by_rarity(unsorted_words), correctly_sorted_words)
+
+    def test_related_rare_words(self):
+        self.assertRaises(ValueError, lambda: related_rare_words(2))
+        self.assertRaises(ValueError, lambda: related_rare_words(2.5))
+        self.assertRaises(ValueError, lambda: related_rare_words(False))
+        self.assertRaises(ValueError, lambda: related_rare_words(None))
+        expected_results = ['absurdist', 'antic', 'artless', 'campy', 'canticle', 'cliched', 'clownish', 'cockle',
+                            'cringeworthy', 'hackneyed', 'histrionic', 'humourous', 'jokey', 'parodic', 'puerile',
+                            'risible', 'sophomoric', 'surrealistic', 'uneconomical', 'uproarious']
+        results = related_rare_words('comical', sample_size=None)
+        self.assertEqual(len(results), 20)
+        self.assertEqual(sorted(results), expected_results)
+        results = related_rare_words('comical', sample_size=None, rare_word_population_max=None)
+        self.assertGreater(len(results), 20)
+        self.assertTrue(set(results).issuperset(set(expected_results)))
+        results = related_rare_words('comical', sample_size=6)
+        self.assertEqual(len(results), 6)
+        self.assertTrue(set(results).issuperset(set(results)))
+
+    def test_related_rare_word(self):
+        result_possibilities = ['artless', 'canticle', 'clownish', 'histrionic', 'humourous', 'parodic', 'risible',
+                                'sophomoric', 'uneconomical', 'uproarious']
+        self.assertIn(related_rare_word('comical'), result_possibilities)
 
 class TestPoemGenerator(unittest.TestCase):
     def get_possible_word_list(self, input_word_list):
@@ -184,7 +210,7 @@ class TestPoemGenerator(unittest.TestCase):
             self.assertTrue(set(possible_words + possible_connectors).issuperset(set(poem_line.split())))
             word, last_word = None, None
             for j in range(len(poem_line.split())):
-                word = re.match(r'[a-zA-Z]*', '...').group()
+                word = re.match(r'[a-zA-Z]*', '...').group()  # Seems sketch
                 #  No word should be too similar to the preceding word
                 self.assertFalse(too_similar(word, last_word))
                 last_word = word
