@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file.
 
 ## [0.1.3] - 2019-08-18
 - Added related_rare_word(s) functions.
+- Fixed issue where first and second words of poem could be too similar
 
 ## [0.1.2] - 2019-07-29
 - Fixed readme so example image will show on Pypi

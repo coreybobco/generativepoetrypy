@@ -316,7 +316,7 @@ def poem_line_from_word_list(word_list, max_line_length=35, connectors=default_c
         max_line_length (int) -- upper limit on the length of the return value in characters
         connectors (list) -- list of glue strings
     """
-    output, last_word = word_list[0], None
+    output, last_word = word_list[0], word_list[0]
     for word in word_list[1:]:
         if random.random() < (.2 + len(output)/100):  # Increasing probability of line termination as line gets longer
             break

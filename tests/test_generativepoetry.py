@@ -37,6 +37,7 @@ class TestValidationAndFilters(unittest.TestCase):
         self.assertTrue(too_similar('dog', 'dog'))
         self.assertTrue(too_similar('dog', 'dogs'))
         self.assertTrue(too_similar('dogs', 'dog'))
+        self.assertTrue(too_similar('spherical', 'spherically'))
 
     def test_filter_word(self):
         self.assertFalse(filter_word('an'))
@@ -209,8 +210,8 @@ class TestPoemGenerator(unittest.TestCase):
             # When split, everything should derive from the possible word list
             self.assertTrue(set(possible_words + possible_connectors).issuperset(set(poem_line.split())))
             word, last_word = None, None
-            for j in range(len(poem_line.split())):
-                word = re.match(r'[a-zA-Z]*', '...').group()  # Seems sketch
+            for text in poem_line.split():
+                word = re.match(r'[a-zA-Z]*', text).group()
                 #  No word should be too similar to the preceding word
                 self.assertFalse(too_similar(word, last_word))
                 last_word = word
