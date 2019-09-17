@@ -14,13 +14,14 @@ __version__ = '0.1.3'
 __all__ = ['rhymes', 'rhyme', 'similar_sounding_word', 'similar_sounding_words', 'similar_meaning_word',
            'similar_meaning_words', 'contextually_linked_word', 'contextually_linked_words', 'related_rare_words',
            'related_rare_word', 'sort_by_rarity', 'frequently_following_words', 'frequently_following_word',
-           'frequently_following_markov_line', 'phonetically_related_words', 'poem_line_from_word_list',
+           'poem_line_from_markov', 'phonetically_related_words', 'poem_line_from_word_list',
            'poem_from_word_list', 'print_poem']
 
 api = datamuse.Datamuse()
 default_connectors = [' ', '   ', '...   ', random.choice([' & ', ' and ']), '  or  ', ' or ']
 line_enders = ['.', ', ', '!', '?', '', ' or', '...']
 line_indents = ['', '    ', '         ']
+common_words = ["the", "with", "in", "that", "not", "a", "an"]
 word_frequency_threshold = 4e-08
 input_type = TypeVar('input_type', str, List[str])  # Must be str or list of strings
 
@@ -37,6 +38,7 @@ else:
     except Exception:
         raise Exception('This module requires the installation of the hunspell dictionary.')
 
+
 def validate_str(input_val, msg='Not a string'):
     """Validate the input argument by checking if it is a string."""
     if not isinstance(input_val, str):
@@ -52,6 +54,16 @@ def validate_str_list(input_val, msg='Not a list'):
             raise ValueError(f'Element {i + 1} not a string')
 
 
+def validate_str_or_list_of_str(input_val):
+    if isinstance(input_val, str):
+        return [input_val]
+    elif isinstance(input_val, list):
+        validate_str_list(input_val, msg='Must provide a string or list of strings')
+        return input_val
+    else:
+        raise ValueError('Must provide a string or list of strings')
+
+
 def has_invalid_characters(string):
     """Check if the string has unpermitted characters: whitespace, digits, and hyphens."""
     return bool(re.search(r"[\s\d\-\']", string))
@@ -64,21 +76,26 @@ def validate_word(input_val):
         raise ValueError('Word may not contain digits, spaces, or special characters.')
 
 
-def too_similar(word1, word2):
+def too_similar(word1, val2):
     """Check whether or not two words are too similar to follow one another in a poem, e.g. if one is the other plus s.
     """
-    if not isinstance(word1, str) or not isinstance(word2, str) or len(word1) == 0 or len(word2) == 0:
-        return False
-    if word1 == word2:
-        return True
-    if word1 + 's' == word2 or word2 + 's' == word1:
-        return True
-    if word1 + 'ly' == word2 or word2 + 'ly' == word1:
-        return True
+    comparison_words = validate_str_or_list_of_str(val2)
+    for word2 in comparison_words:
+        if not isinstance(word1, str) or not isinstance(word2, str) or len(word1) == 0 or len(word2) == 0:
+            return False
+        if word1 == word2:
+            return True
+        if word1 + 's' == word2 or word2 + 's' == word1:
+            return True
+        if word1 + 'ly' == word2 or word2 + 'ly' == word1:
+            return True
+        if (len(word1) > 2 and len(word2) > 2) and ((word1[-2] == 'e' and word2 + 'd' == word1) or
+            (word2[-2] == 'e' and word1 + 'd' == word1)):
+            return True
     return False
 
 
-def filter_word(string, spellcheck=True):
+def filter_word(string, spellcheck=True, exclude_words=[]):
     """Filter out a word if it is too short, has invalid characters, is too archaic, or (optionally) cannot be found in
     a spelling dictionary.
 
@@ -94,10 +111,12 @@ def filter_word(string, spellcheck=True):
         return False
     if spellcheck and not hobj.spell(string):
         return False
+    if string in exclude_words:
+        return False
     return True
 
 
-def filter_word_list(word_list, spellcheck=True):
+def filter_word_list(word_list, spellcheck=True, exclude_words=[]):
     """Filter a list of words using the filter_word method.
 
     Keyword arguments:
@@ -105,7 +124,7 @@ def filter_word_list(word_list, spellcheck=True):
     """
     word_list = list(
         filter(
-            lambda word: filter_word(word, spellcheck=spellcheck), word_list
+            lambda word: filter_word(word, spellcheck=spellcheck, exclude_words=exclude_words), word_list
         )
     )
     return word_list
@@ -161,7 +180,7 @@ def extract_sample(word_list, sample_size=None) -> list:
         return sample
 
 
-def similar_sounding_words(input_word, sample_size=6, datamuse_api_max=50) -> list:
+def similar_sounding_words(input_val, sample_size=6, datamuse_api_max=50) -> list:
     """Return a list of similar sounding words to a given word, in randomized order, if at least one can be found using
     Datamuse API.
 
@@ -174,12 +193,12 @@ def similar_sounding_words(input_word, sample_size=6, datamuse_api_max=50) -> li
                                   score provided by Datamuse), hence by using both kwargs, one can control the size of
                                   both the sample pool and the sample size.
     """
-    validate_word(input_word)
-    response = api.words(sl=input_word, max=datamuse_api_max) if datamuse_api_max else api.words(sl=input_word)
-    word_list = filter_word_list([obj['word'] for obj in response])
-    if input_word in word_list:
-        word_list.remove(input_word)
-    return extract_sample(word_list, sample_size=sample_size)
+    input_words = validate_str_or_list_of_str(input_val)
+    ss_words = []
+    for input_word in input_words:
+        response = api.words(sl=input_word, max=datamuse_api_max) if datamuse_api_max else api.words(sl=input_word)
+        ss_words.extend(filter_word_list([obj['word'] for obj in response], exclude_words=input_words))
+    return extract_sample(ss_words, sample_size=sample_size)
 
 
 def similar_sounding_word(input_word, datamuse_api_max=20) -> str:
@@ -193,7 +212,7 @@ def similar_sounding_word(input_word, datamuse_api_max=20) -> str:
     return next(iter(similar_sounding_words(input_word, sample_size=1, datamuse_api_max=datamuse_api_max)), None)
 
 
-def similar_meaning_words(input_word, sample_size=6, datamuse_api_max=20) -> list:
+def similar_meaning_words(input_val: input_type, sample_size=6, datamuse_api_max=20) -> list:
     """Return a list of similar meaning words to a given word, in randomized order, if at least one can be found using
     Datamuse API.
 
@@ -206,10 +225,12 @@ def similar_meaning_words(input_word, sample_size=6, datamuse_api_max=20) -> lis
                                   score provided by Datamuse), hence by using both kwargs, one can control the size of
                                   both the sample pool and the sample size.
     """
-    validate_word(input_word)
-    response = api.words(ml=input_word, max=datamuse_api_max) if datamuse_api_max else api.words(ml=input_word)
-    word_list = filter_word_list([obj['word'] for obj in response], spellcheck=False)
-    return extract_sample(word_list, sample_size=sample_size)
+    input_words = validate_str_or_list_of_str(input_val)
+    sm_words = []
+    for input_word in input_words:
+        response = api.words(ml=input_word, max=datamuse_api_max) if datamuse_api_max else api.words(ml=input_word)
+        sm_words.extend(filter_word_list([obj['word'] for obj in response], spellcheck=False))
+    return extract_sample(sm_words, sample_size=sample_size)
 
 
 def similar_meaning_word(input_word, datamuse_api_max=10) -> str:
@@ -223,7 +244,7 @@ def similar_meaning_word(input_word, datamuse_api_max=10) -> str:
     return next(iter(similar_meaning_words(input_word, sample_size=1, datamuse_api_max=datamuse_api_max)), None)
 
 
-def contextually_linked_words(input_word, sample_size=6, datamuse_api_max=20):
+def contextually_linked_words(input_val: input_type, sample_size=6, datamuse_api_max=20):
     """Return a list of words that frequently appear within the same document as a given word, in randomized order,
     if at least one can be found using the Datamuse API.
 
@@ -236,10 +257,13 @@ def contextually_linked_words(input_word, sample_size=6, datamuse_api_max=20):
                                   numeric score provided by Datamuse), hence by using both kwargs, one can control the
                                   size of both the sample pool and the sample size.
     """
-    validate_word(input_word)
-    response = api.words(rel_trg=input_word, max=datamuse_api_max) if datamuse_api_max else api.words(rel_trg=input_word)
-    word_list = filter_word_list([obj['word'] for obj in response], spellcheck=False)  # Spellcheck removes proper nouns
-    return extract_sample(word_list, sample_size=sample_size)
+    input_words = validate_str_or_list_of_str(input_val)
+    cl_words = []
+    for input_word in input_words:
+        validate_word(input_word)
+        response = api.words(rel_trg=input_word, max=datamuse_api_max) if datamuse_api_max else api.words(rel_trg=input_word)
+        cl_words.extend(filter_word_list([obj['word'] for obj in response], spellcheck=False))  # Spellcheck removes proper nouns
+    return extract_sample(cl_words, sample_size=sample_size)
 
 
 def contextually_linked_word(input_word, datamuse_api_max=10) -> str:
@@ -252,6 +276,7 @@ def contextually_linked_word(input_word, datamuse_api_max=10) -> str:
                                   provided by Datamuse).
     """
     return next(iter(contextually_linked_words(input_word, sample_size=1, datamuse_api_max=datamuse_api_max)), None)
+
 
 def frequently_following_words(input_word, sample_size=6, datamuse_api_max=20) -> list:
     """Return a list of words that frequently follow the given word, in randomized order,
@@ -268,22 +293,27 @@ def frequently_following_words(input_word, sample_size=6, datamuse_api_max=20) -
     """
     validate_word(input_word)
     response = api.words(lc=input_word, max=datamuse_api_max) if datamuse_api_max else api.words(lc=input_word)
-    word_list = filter_word_list([obj['word'] for obj in response], spellcheck=True)  # Spellcheck removes proper nouns
-    return extract_sample(word_list, sample_size=sample_size)
+    # Filter but don't use spellcheck -- it removes important words like 'of'
+    word_list = filter_word_list([obj['word'] for obj in response], spellcheck=False)
+    return extract_sample(sort_by_rarity(word_list), sample_size=sample_size)
 
 
-def frequently_following_word(input_word, datamuse_api_max=10) -> str:
+def frequently_following_word(input_word, datamuse_api_max=10, weight_by_rarity=False) -> str:
     """Return a random word that frequently follows the given word if at least one can be found using the Datamuse API.
 
     Keyword arguments:
         datamuse_api_max (int) -- specifies the maximum number of results returned by the API. The API's results are
                                   always sorted from most to least similar sounding (according to a numeric score
-                                  provided by Datamuse).
+                                  provided by Datamu
+                                  se).
     """
+    if weight_by_rarity:
+        return random.choice(sort_by_rarity(frequently_following_words(
+            input_word, sample_size=None, datamuse_api_max=20))[:4])
     return next(iter(frequently_following_words(input_word, sample_size=1, datamuse_api_max=datamuse_api_max)), None)
 
 
-def related_rare_words(input_word, sample_size=8, rare_word_population_max=20) -> list:
+def related_rare_words(input_val: input_type, sample_size=8, rare_word_population_max=20) -> list:
     """Return a random sample of rare related words to a given word. The words can be related phonetically,
     contextually, or by meaning).
 
@@ -293,11 +323,15 @@ def related_rare_words(input_word, sample_size=8, rare_word_population_max=20) -
         rare_word_population_max (int) -- specifies the maximum number of related words to subsample from. The rare word
                                           population is sorted from rarest to most common.
     """
-    related_words = phonetically_related_words(input_word) + \
-                    contextually_linked_words(input_word, sample_size=None, datamuse_api_max=100) + \
-                    similar_meaning_words(input_word, sample_size=None, datamuse_api_max=100)
-    related_words = [word for word in related_words if not too_similar(input_word, word)]
-    return extract_sample(sort_by_rarity(related_words)[:rare_word_population_max], sample_size=sample_size)
+    input_words = validate_str_or_list_of_str(input_val)
+    results = []
+    for input_word in input_words:
+        related_words = phonetically_related_words(input_word) + \
+                        contextually_linked_words(input_word, sample_size=None, datamuse_api_max=100) + \
+                        similar_meaning_words(input_word, sample_size=None, datamuse_api_max=100)
+        results.extend([word for word in related_words if not too_similar(input_word, word)])
+        random.shuffle(results)
+    return extract_sample(sort_by_rarity(results)[:rare_word_population_max], sample_size=sample_size)
 
 
 def related_rare_word(input_word, rare_word_population_max=10):
@@ -321,14 +355,7 @@ def phonetically_related_words(input_val: input_type, sample_size=None, datamuse
     datamuse_api_max -- specifies how many API results can be returned by the API client when fetching similar
                         meaning words.
     """
-    if isinstance(input_val, str):
-        input_words = [input_val]
-    elif isinstance(input_val, list):
-        validate_str_list(input_val, msg='Must provide a string or list of strings')
-        input_words = input_val
-    else:
-        raise ValueError('Must provide a string or list of strings')
-
+    input_words = validate_str_or_list_of_str(input_val)
     pr_words = []
     for word in input_words:
         pr_words.extend(rhymes(word, sample_size=sample_size))
@@ -364,59 +391,72 @@ def poem_line_from_word_list(word_list, max_line_length=35, connectors=default_c
         last_connector = connector
     return output
 
-def frequently_following_markov_line(starting_word, num_words=4, rhyme_with=None, word_list=[]):
-    common_words = ["the", "with", "in", "that", "not"]
+
+def last_word_of_markov_line(previous_words, last_line_last_word=None):
+    last_word = None
+    if last_line_last_word and last_line_last_word not in common_words:
+        while last_word is None:
+            last_word = rhyme(previous_words[-1])
+            last_word = random_nonrhyme(previous_words, last_line_last_word)
+    else:
+        while last_word is None:
+            last_word = random_nonrhyme(previous_words, last_line_last_word)
+    return last_word
+
+
+def nonlast_word_of_markov_line(previous_words, last_line_last_word=None, words_for_sampling=[]):
+    word = None
+    if previous_words[-1] in common_words:
+        if random.random() >= .66:
+            word = random_nonrhyme(previous_words, last_line_last_word)
+        else:
+            while word is None or too_similar(word, previous_words):
+                word = random.choice(words_for_sampling)
+    else:
+        if len(words_for_sampling):
+            threshold1, threshold2 = .66, 1
+        else:
+            threshold1, threshold2 = .5, 1
+        while word is None or too_similar(word, previous_words):
+            randfloat = random.random()
+            if randfloat > threshold1:
+                word = random_nonrhyme(previous_words, last_line_last_word)
+            elif randfloat > threshold2:
+                word = random.choice(words_for_sampling)
+            else:
+                word = frequently_following_word(previous_words[-1], weight_by_rarity=False)
+    return word
+
+
+def random_nonrhyme(previous_words, last_line_last_word):
+    """Return a random nonrhyme"""
+    result = None
+    while result is None:
+        if random.random() <= .7 and last_line_last_word:
+            next_word_algorithms = [similar_sounding_word, similar_meaning_word, contextually_linked_word]
+            possible_result = random.choice(next_word_algorithms)(last_line_last_word)
+        else:
+            if random.random() >= .5:
+                possible_result = frequently_following_word(previous_words[-1], weight_by_rarity=True)
+            else:
+                possible_result = similar_sounding_word(random.choice(previous_words))
+        if not too_similar(possible_result, previous_words) and \
+                not(last_line_last_word and too_similar(possible_result, last_line_last_word)):
+            result = possible_result
+    return result
+
+
+def poem_line_from_markov(starting_word, num_words=4, rhyme_with=None, words_for_sampling=[], max_line_length=35) -> list:
     output_words, previous_word = [starting_word], starting_word
     for i in range(num_words - 1):
-        if i == num_words - 2 and rhyme_with:
-            last_word = None
-            while last_word is None or last_word in output_words:
-                if rhyme_with in ['the', 'and', 'with', 'that', 'there', 'is']:
-                    try:
-                        last_word = contextually_linked_word(rhyme(starting_word))
-                    except Exception:
-                        last_word = similar_sounding_word(starting_word)
-                elif rhyme_with:
-                    try:
-                        last_word = rhyme(rhyme_with)
-                        last_word = similar_sounding_word(rhyme_with) if last_word is None else last_word
-                        last_word = similar_meaning_word(rhyme_with) if last_word is None else last_word
-                    except Exception:
-                        last_word = ''
-                else:
-                    last_word = frequently_following_word(str(previous_word))
-            output_words.append(last_word)
+        if (i == num_words - 2 and rhyme_with) or len(' '.join(output_words)) >= max_line_length - 6:
+            #  If the last word must rhyme with something
+            word = last_word_of_markov_line(output_words, last_line_last_word=rhyme_with)
         else:
-            word = None
-            while word is None or (word not in common_words and word in output_words):
-                if previous_word in common_words:
-                    randfloat = random.random()
-                    if  randfloat > .66:
-                        try:
-                            word = contextually_linked_word(rhyme(starting_word))
-                        except Exception:
-                            word = similar_sounding_word(starting_word)
-                    elif randfloat > .33:
-                        word = random.choice(word_list)
-                    else:
-                        word = similar_sounding_word(starting_word)
-                else:
-                    randfloat = random.random()
-                    if  randfloat > .66:
-                        try:
-                            word = contextually_linked_word(rhyme(starting_word))
-                        except Exception:
-                            word = similar_sounding_word(starting_word)
-                    elif randfloat > .33:
-                        word = random.choice(word_list)
-                    else:
-                        word = frequently_following_word(str(previous_word))
-            try:
-                output_words.append(word)
-            except Exception:
-                pass
-            previous_word = word
+            word = nonlast_word_of_markov_line(output_words, rhyme_with, words_for_sampling=words_for_sampling)
+        output_words.append(word)
     return " ".join(output_words)
+
 
 def poem_from_word_list(phonetic_input_word_list, lines=6, max_line_length=35, limit_line_to_one_input_word=False):
     """Generate a visual poem from a list of words by finding some random phonetically related

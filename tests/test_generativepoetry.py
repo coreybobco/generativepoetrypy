@@ -19,8 +19,18 @@ class TestValidationAndFilters(unittest.TestCase):
         self.assertRaises(ValueError, lambda: validate_str_list(2.5))
         self.assertRaises(ValueError, lambda: validate_str_list(False))
         self.assertRaises(ValueError, lambda: validate_str_list(None))
+        self.assertRaises(ValueError, lambda: validate_str_list('not a list'))
         self.assertRaises(ValueError, lambda: validate_str_list(['a', 'b', None]))
         validate_str_list(['a', 'b', 'c'])
+
+    def test_validate_str_or_list_of_str(self):
+        self.assertRaises(ValueError, lambda: validate_str_list(2))
+        self.assertRaises(ValueError, lambda: validate_str_list(2.5))
+        self.assertRaises(ValueError, lambda: validate_str_list(False))
+        self.assertRaises(ValueError, lambda: validate_str_list(None))
+        self.assertRaises(ValueError, lambda: validate_str_list(['a', 'b', None]))
+        validate_str('deciduous')
+        validate_str_list(['anodyne', 'bolo', 'cdrkssdjak'])
 
     def test_has_invalid_characters(self):
         self.assertTrue(has_invalid_characters('gh0st'))
@@ -55,6 +65,8 @@ class TestValidationAndFilters(unittest.TestCase):
         word_list = ['araignment', 'arraignment', 'dynosaur', 'dinosaur']
         correctly_spelled_word_list = ['arraignment', 'dinosaur']
         self.assertEqual(filter_word_list(word_list), correctly_spelled_word_list)
+        exclude_words = ['diamond', 'dinosaur']
+        self.assertEqual(filter_word_list(word_list, exclude_words=exclude_words), ['arraignment'])
 
 
 class TestWordSampling(unittest.TestCase):
@@ -86,12 +98,19 @@ class TestWordSampling(unittest.TestCase):
         self.assertTrue(set(['a','b','c','d','e','f']).issuperset(set(sample)))
 
     def test_similar_sounding_words(self):
-        all_similar_sounding_words = ['hastening', 'heightening', 'hominid', 'hominy', 'homonyms', 'summoning',
+        similar_sounding_to_homonym_words = ['hastening', 'heightening', 'hominid', 'hominy', 'homonyms', 'summoning',
                                       'synonym']
-        self.assertEqual(sorted(similar_sounding_words('homonym', sample_size=None)), all_similar_sounding_words)
+        self.assertEqual(sorted(similar_sounding_words('homonym', sample_size=None)), similar_sounding_to_homonym_words)
         results = similar_sounding_words('homonym')
         self.assertEqual(len(results), 6)
-        self.assertTrue(set(all_similar_sounding_words).issuperset(set(results)))
+        self.assertTrue(set(similar_sounding_to_homonym_words).issuperset(set(results)))
+        similar_sounding_to_ennui_words = ['anew', 'any', 'emcee', 'empty', 'ennui']
+        all_similar_sounding_words = sorted(similar_sounding_to_homonym_words + similar_sounding_to_ennui_words)
+        self.assertEqual(sorted(similar_sounding_words(['homonym', 'ennui'], sample_size=None)),
+                         all_similar_sounding_words)
+        results = similar_sounding_words(['homonym', 'ennui'])
+        self.assertEqual(len(results), 6)
+        self.assertTrue(set(similar_sounding_to_homonym_words).issuperset(set(results)))
 
     def test_similar_sounding_word(self):
         self.assertIsNone(similar_sounding_word('voodoo'))
