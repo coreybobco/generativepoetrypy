@@ -3,9 +3,9 @@ import string
 from prosedecomposer import *
 from reportlab.pdfgen import canvas
 from generativepoetry import *
-from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.pdfmetrics import registerFont, registerFontFamily
 from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.lib.pagesizes import letter, landscape
 
 
 class PDFGenerator:
@@ -35,8 +35,9 @@ class PDFGenerator:
         else:
             return random.choice(font_sizes)
 
-    def get_max_x_coordinate(self, line, font_size):
-        if (font_size >= 23 and len(line) >= 17) or (font_size >= 20 and len(line) > 30):
+    def get_max_x_coordinate(self, line, font_choice, font_size):
+        if (font_size >= 23 and len(line) >= 17) or (font_size >= 20 and len(line) > 30) or \
+                font_choice.startswith('Courier'):  # Courier is the widest
             return 30
         elif (font_size == 23 and len(line) > 14) or (font_size >= 20 and len(line) > 16) or len(line) > 20:
             return 100
@@ -77,32 +78,44 @@ class AlphabetSoupPoemGenerator(PDFGenerator):
 
 class MarkovPoemGenerator(PDFGenerator):
 
-    def generate_pdf(self):
+    def generate_pdf(self, orientation='landscape'):
+        if orientation.lower() == 'landscape':
+            num_lines = 16
+            y_coordinate = 580
+            min_line_words = 8
+            max_line_words = 13
+        elif orientation.lower() == 'portrait':
+            num_lines = 24
+            y_coordinate = 780
+            min_line_words = 4
+            max_line_words = 7
+        else:
+            raise Exception('Must choose from the following orientations: portrait, landscape')
         regular_font_sizes = [15, 18, 21, 24, 28]
         input_words = self.get_input_words()
         words_for_sampling = input_words + phonetically_related_words(input_words)
         poem_lines = []
         last_line_last_word = ''
         font_choice, last_font_choice = None, None
-        for i in range(24):
-            print(i)
-            word = word_list.pop()
-            print(word)
-            random.shuffle(word_list)
-            rhyme_with = last_line_last_word if i % 2 == 1 and random.random() < .7 else None
+        random.shuffle(words_for_sampling)
+        for i in range(num_lines):
+            rhyme_with = last_line_last_word if i % 2 == 1 else None
             line = poem_line_from_markov(words_for_sampling.pop(), words_for_sampling=words_for_sampling,
-                                                    num_words=random.randint(4,7), rhyme_with=rhyme_with,
-                                                    max_line_length=40)
+                                         num_words=random.randint(min_line_words,max_line_words), rhyme_with=rhyme_with,
+                                         max_line_length=40)
+            print(line)
             poem_lines.append(line)
             last_line_last_word = line.split(' ')[-1]
-        c = canvas.Canvas(f"{','.join(input_words)}.pdf")
-        y_coordinate = 780
+        if orientation == 'landscape':
+            c = canvas.Canvas(f"{','.join(input_words)}.pdf", pagesize=landscape(letter))
+        else:
+            c = canvas.Canvas(f"{','.join(input_words)}.pdf")
         for line in poem_lines:
             line = random.choice([line, line, line, line.upper()])
             font_size = self.get_font_size(line, regular_font_sizes)
-            max_x_coordinate = self.get_max_x_coordinate(line, font_size)
             while font_choice is None or last_font_choice == font_choice:
                 font_choice = random.choice(self.font_choices)
+            max_x_coordinate = self.get_max_x_coordinate(line, font_choice, font_size)
             c.setFont(font_choice, font_size)
             last_font_choice = font_choice
             c.drawString(random.randint(15, max_x_coordinate), y_coordinate, line)

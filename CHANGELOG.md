@@ -1,6 +1,13 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+- Added frequently following word(s) functions
+- similar_meaning_words, similar_sounding_words, etc. (plural functions) now also accept list of strings as argument
+- Added markov chain algorithm for constructing poem lines
+- Added PDF generation
+- Added more cases to 'too similar'
+
 ## [0.1.3] - 2019-08-18
 - Added related_rare_word(s) functions.
 - Fixed issue where first and second words of poem could be too similar

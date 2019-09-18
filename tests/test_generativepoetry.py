@@ -40,14 +40,19 @@ class TestValidationAndFilters(unittest.TestCase):
         self.assertFalse(has_invalid_characters('espousal'))
 
     def test_too_similar(self):
-        self.assertFalse(too_similar(None, 25.2))
-        self.assertFalse(too_similar('string', 25))
-        self.assertFalse(too_similar(list(), 'beans'))
+        self.assertRaises(ValueError, lambda: too_similar(None, 25.2))
+        self.assertRaises(ValueError, lambda: too_similar('string', 25))
+        self.assertRaises(ValueError, lambda: too_similar(list(), 'beans'))
         self.assertFalse(too_similar('self', 'other'))
         self.assertTrue(too_similar('dog', 'dog'))
         self.assertTrue(too_similar('dog', 'dogs'))
         self.assertTrue(too_similar('dogs', 'dog'))
         self.assertTrue(too_similar('spherical', 'spherically'))
+        self.assertTrue(too_similar('spherically', 'spherical'))
+        self.assertTrue(too_similar('riposte', 'riposted'))
+        self.assertTrue(too_similar('riposted', 'riposte'))
+        self.assertTrue(too_similar('riposte', ['dogs', 'mushroom', 'riposted']))
+        self.assertFalse(too_similar('riposte', ['dogs', 'mushroom', 'quails']))
 
     def test_filter_word(self):
         self.assertFalse(filter_word('an'))
@@ -104,13 +109,13 @@ class TestWordSampling(unittest.TestCase):
         results = similar_sounding_words('homonym')
         self.assertEqual(len(results), 6)
         self.assertTrue(set(similar_sounding_to_homonym_words).issuperset(set(results)))
-        similar_sounding_to_ennui_words = ['anew', 'any', 'emcee', 'empty', 'ennui']
+        similar_sounding_to_ennui_words = ['anew', 'any', 'emcee', 'empty']
         all_similar_sounding_words = sorted(similar_sounding_to_homonym_words + similar_sounding_to_ennui_words)
         self.assertEqual(sorted(similar_sounding_words(['homonym', 'ennui'], sample_size=None)),
                          all_similar_sounding_words)
         results = similar_sounding_words(['homonym', 'ennui'])
         self.assertEqual(len(results), 6)
-        self.assertTrue(set(similar_sounding_to_homonym_words).issuperset(set(results)))
+        self.assertTrue(set(all_similar_sounding_words).issuperset(set(results)))
 
     def test_similar_sounding_word(self):
         self.assertIsNone(similar_sounding_word('voodoo'))
@@ -232,7 +237,8 @@ class TestPoemGenerator(unittest.TestCase):
             for text in poem_line.split():
                 word = re.match(r'[a-zA-Z]*', text).group()
                 #  No word should be too similar to the preceding word
-                self.assertFalse(too_similar(word, last_word))
+                if word and last_word:
+                    self.assertFalse(too_similar(word, last_word))
                 last_word = word
             # Line length should not exceed maximum line length
             self.assertTrue(len(poem_line) <= max_line_length)
