@@ -24,5 +24,8 @@ lib64
 # Pypi
 testpypi
 
+# Mypy
+.mypy_cache
+
 *.pdf
 *.png

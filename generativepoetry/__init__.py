@@ -11,11 +11,11 @@ __author__ = 'Corey Bobco'
 __email__ = 'corey.bobco@gmail.com'
 __version__ = '0.1.3'
 
-__all__ = ['rhymes', 'rhyme', 'similar_sounding_word', 'similar_sounding_words', 'similar_meaning_word',
-           'similar_meaning_words', 'contextually_linked_word', 'contextually_linked_words', 'phonetically_related_words',
-           'related_rare_words', 'related_rare_word', 'sort_by_rarity', 'frequently_following_words',
-           'frequently_following_word', 'poem_line_from_word_list', 'poem_line_from_markov', 'random_nonrhyme',
-           'poem_from_word_list', 'print_poem']
+__all__ = ['sort_by_rarity', 'rhymes', 'rhyme', 'similar_sounding_word', 'similar_sounding_words',
+           'similar_meaning_word', 'similar_meaning_words', 'contextually_linked_word', 'contextually_linked_words',
+           'frequently_following_words', 'frequently_following_word', 'phonetically_related_words',
+           'related_rare_words', 'related_rare_word', 'poem_line_from_word_list', 'poem_line_from_markov',
+           'random_nonrhyme', 'poem_from_word_list', 'print_poem']
 
 api = datamuse.Datamuse()
 default_connectors = [' ', '   ', '...   ', random.choice([' & ', ' and ']), '  or  ', ' or ']
@@ -24,7 +24,7 @@ line_indents = ['', '    ', '         ']
 common_words = ["the", "with", "in", "that", "not", "a", "an"]
 word_frequency_threshold = 4e-08
 str_or_list_of_str = TypeVar('str_or_list_of_str', str, List[str])
-annoying_words = ['thew', 'iii', 'arr']
+unfitting_words = ['thew', 'iii', 'arr', 'atty', 'haj']
 
 if platform.system() == 'Windows':
     raise Exception('Your OS is not currently supported.')
@@ -131,7 +131,7 @@ def filter_word(string, spellcheck=True, exclude_words=[]):
                        'of' for some reason.
     :param exclude_words: list of words to filter out
     """
-    exclude_words.extend(annoying_words)  # Some words Datamuse tends to return that disruptive poetic flow
+    exclude_words.extend(unfitting_words)  # Some words Datamuse tends to return that disruptive poetic flow
     validate_str(string)
     if len(string) < 3:
         return False
@@ -282,8 +282,8 @@ def similar_meaning_word(input_word: str, datamuse_api_max: Optional[int] = 10) 
     return next(iter(similar_meaning_words(input_word, sample_size=1, datamuse_api_max=datamuse_api_max)), None)
 
 
-def contextually_linked_words(input_val: str_or_list_of_str, sample_size: Optional[int] = 6, datamuse_api_max: Optional[int] = 20) \
-        -> list:
+def contextually_linked_words(input_val: str_or_list_of_str, sample_size: Optional[int] = 6,
+                              datamuse_api_max: Optional[int] = 20) -> list:
     """Return a list of words that frequently appear within the same document as a given word, in randomized order,
     if at least one can be found using the Datamuse API.
 
@@ -320,8 +320,8 @@ def contextually_linked_word(input_word: str, datamuse_api_max: Optional[int] = 
     return next(iter(contextually_linked_words(input_word, sample_size=1, datamuse_api_max=datamuse_api_max)), None)
 
 
-def frequently_following_words(input_val: str_or_list_of_str, sample_size: Optional[int] = 6, datamuse_api_max: Optional[int] = 20) \
-        -> list:
+def frequently_following_words(input_val: str_or_list_of_str, sample_size: Optional[int] = 7,
+                               datamuse_api_max: Optional[int] = None) -> list:
     """Return a list of words that frequently follow the given word, in randomized order, if at least one can be found
     using the Datamuse API.
 
@@ -331,8 +331,8 @@ def frequently_following_words(input_val: str_or_list_of_str, sample_size: Optio
                              results.
     :param datamuse_api_max: specifies the maximum number of results returned by the API. The API client's
                                   results are always sorted from most to least frequently coappearing (according to a
-                                  numeric score provided by Datamuse), hence by using both parameters, one can control the
-                                  size of both the sample pool and the sample size.
+                                  numeric score provided by Datamuse), hence by using both parameters, one can control
+                                  the size of both the sample pool and the sample size.
     """
     input_words = validate_str_or_list_of_str(input_val)
     ff_words: List[str] = []
@@ -342,30 +342,32 @@ def frequently_following_words(input_val: str_or_list_of_str, sample_size: Optio
         exclude_words = ff_words.copy()
         ff_words.extend(filter_word_list([obj['word'] for obj in response], spellcheck=False,
                                          exclude_words=exclude_words))
-    return extract_sample(ff_words, sample_size=sample_size)
+    if sample_size and sample_size > 3:
+        # Pick 3 at random from the whole and the rest from the top 20 rarest following words
+        return extract_sample(ff_words, sample_size=3) + \
+               extract_sample(sort_by_rarity(ff_words)[:20], sample_size=sample_size - 3)
+    return extract_sample(ff_words, sample_size=sample_size)  # Standard sampling
 
 
-def frequently_following_word(input_word, datamuse_api_max=10, weight_by_rarity: bool = False) -> Optional[str]:
+def frequently_following_word(input_word, datamuse_api_max=10) -> Optional[str]:
     """Return a random word that frequently follows the given word if at least one can be found using the Datamuse API.
 
     :param input_word: the word which this function is looking up a frequently following word of
     :param datamuse_api_max: specifies the maximum number of results returned by the API. The API client's results are
                              always sorted from most to least similar sounding (according to a numeric score provided
                              by Datamuse).
-    :param weight_by_rarity: If true, select from the top 4 rarest words of the frequently following words results
     """
     word: Optional[str]
-    if weight_by_rarity:
-        word = random.choice(sort_by_rarity(frequently_following_words(
-            input_word, sample_size=None, datamuse_api_max=20))[:4])
-    else:
-        word = next(iter(frequently_following_words(
-            input_word, sample_size=1,datamuse_api_max=datamuse_api_max)), None)
-    return word
+    # if weight_by_rarity:
+    #     word = random.choice(sort_by_rarity(frequently_following_words(
+    #         input_word, sample_size=None, datamuse_api_max=20))[:4])
+    # else:
+    word = next(iter(frequently_following_words(input_word, sample_size=1,datamuse_api_max=datamuse_api_max)), None)
+    # return word
 
 
 def phonetically_related_words(input_val: str_or_list_of_str, sample_size=None, datamuse_api_max=50) -> list:
-    """Get a list of rhymes and similar sounding words to a word or list of words.
+    """Returns a list of rhymes and similar sounding words to a word or list of words.
 
     :param input_val: the word or words in relation to which this function is looking up phonetically related words
     :param sample_size: If provided, pass this argument to the functions rhymes and similar_sounding_words so that
@@ -458,10 +460,10 @@ def last_word_of_markov_line(previous_words, rhyme_with=None) -> str:
     if rhyme_with and rhyme_with not in common_words:
         last_word = rhyme(rhyme_with)
         if not last_word:
-            while last_word is None:
+            while last_word is None or too_similar(last_word, previous_words):
                 last_word = random_nonrhyme(previous_words, rhyme_with)
     else:
-        while last_word is None:
+        while last_word is None or or too_similar(last_word, previous_words):
             last_word = random_nonrhyme(previous_words, rhyme_with)
     return last_word
 
@@ -486,14 +488,14 @@ def nonlast_word_of_markov_line(previous_words: List[str], rhyme_with: Optional[
             threshold1, threshold2 = .66, 1
         else:
             threshold1, threshold2 = .5, 1
-        while word is None or too_similar(word, previous_words):
+        while word is None or too_similar(word,  previous_words[-1]):
             randfloat = random.random()
             if randfloat > threshold1:
                 word = random_nonrhyme(previous_words, rhyme_with)
             elif randfloat > threshold2:
                 word = random.choice(words_for_sampling)
             else:
-                word = frequently_following_word(previous_words[-1], weight_by_rarity=False)
+                word = frequently_following_word(previous_words[-1])
     return word
 
 
@@ -517,7 +519,7 @@ def random_nonrhyme(previous_words: List[str], rhyme_with: Optional[str] = None)
             possible_result = random.choice(next_word_algorithms)(rhyme_with)
         else:
             if random.random() >= .5:
-                possible_result = frequently_following_word(previous_words[-1], weight_by_rarity=True)
+                possible_result = frequently_following_word(previous_words[-1])
             else:
                 possible_result = similar_sounding_word(random.choice(previous_words))
         if possible_result and not too_similar(possible_result, previous_words) and \

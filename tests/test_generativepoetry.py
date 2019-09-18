@@ -192,6 +192,12 @@ class TestWordSampling(unittest.TestCase):
                                                 'polyps', 'pupa', 'pupal', 'tadpole']
         self.assertIn(contextually_linked_word('metamorphosis'), contextually_linked_to_metamorphosis)
 
+    def test_frequently_following_words(self):
+        pass
+
+    def test_frequently_following_word(self):
+        pass
+
     def test_phonetically_related_words(self):
         self.assertRaises(ValueError, lambda: phonetically_related_words(2))
         self.assertRaises(ValueError, lambda: phonetically_related_words(2.5))

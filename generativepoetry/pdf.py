@@ -9,7 +9,6 @@ from reportlab.lib.pagesizes import letter, landscape
 
 
 class PDFGenerator:
-    connectors = [' + ', ' - ', ' * ', ' % ', ' = ', ' != ', ' :: ']  # ' → ', ' →↑ ',  ' →↓ ' ,
 
     def __init__(self):
         registerFont(TTFont('arial', 'arial.ttf'))
@@ -21,7 +20,7 @@ class PDFGenerator:
         registerFont(TTFont('VeraIt', 'VeraIt.ttf'))
         registerFont(TTFont('VeraBI', 'VeraBI.ttf'))
         self.font_choices = ['arial', 'arial-bold', 'arial-italic', 'arial-bolditalic',
-                             'Courier', 'Courier-Bold', 'Courier-BoldOblique','Courier-Oblique',
+                             'Courier-Bold', 'Courier-Bold', 'Courier-BoldOblique','Courier-BoldOblique',
                              'Helvetica', 'Helvetica-BoldOblique', 'Helvetica-Bold', 'Helvetica-Oblique',
                              'Times-Bold', 'Times-BoldItalic', 'Times-Italic', 'Times-Roman',
                              'Vera', 'VeraBd', 'VeraBI', 'VeraIt']
@@ -125,16 +124,16 @@ class MarkovPoemGenerator(PDFGenerator):
 
 
 class FuturistPoemPDFGenerator():
+    connectors = [' + ', ' - ', ' * ', ' % ', ' = ', ' != ', ' :: ']
 
     def generate(self):
         regular_font_sizes = [15, 18, 21, 24, 28]
-        connectors = [' + ', ' - ', ' * ', ' % ', ' = ', ' != ', ' :: '] #  ' → ', ' →↑ ',  ' →↓ ' ,
         input_words = self.get_input_words()
         word_list = input_words + phonetically_related_words(input_words)
         poem_lines = []
         for i in range(25):
             random.shuffle(word_list)
-            poem_lines.append(poem_line_from_word_list(word_list, connectors=connectors, max_line_length=40))
+            poem_lines.append(poem_line_from_word_list(word_list, connectors=self.connectors, max_line_length=40))
         c = canvas.Canvas(f"{','.join(input_words)}.pdf")
         y_coordinate = 60
         for line in poem_lines:
