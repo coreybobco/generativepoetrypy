@@ -53,6 +53,8 @@ class TestValidationAndFilters(unittest.TestCase):
         self.assertTrue(too_similar('riposted', 'riposte'))
         self.assertTrue(too_similar('riposte', ['dogs', 'mushroom', 'riposted']))
         self.assertFalse(too_similar('riposte', ['dogs', 'mushroom', 'quails']))
+        self.assertTrue(too_similar('thee', 'the'))
+        self.assertTrue(too_similar('thee', 'the'))
 
     def test_filter_word(self):
         self.assertFalse(filter_word('an'))
@@ -60,6 +62,7 @@ class TestValidationAndFilters(unittest.TestCase):
         self.assertFalse(filter_word('errantry'))  # 1.51e-08 so below threshold
         self.assertTrue(filter_word('crepuscular'))  # 7.41e-08 so OK
         self.assertTrue(filter_word('puppy'))
+        self.assertFalse(filter_word('thew'))  # from the annoying words list
 
     def test_filter_word_list(self):
         word_list = ['the', 'crepuscular', 'dogs']
@@ -77,18 +80,23 @@ class TestValidationAndFilters(unittest.TestCase):
 class TestWordSampling(unittest.TestCase):
     def test_rhymes(self):
         self.assertEqual(rhymes('metamorphosis'), [])
+        rhymes_with_clouds = ['crowds', 'shrouds']
         results = rhymes('clouds')
-        self.assertEqual(sorted(results), ['crowds', 'shrouds'])
-
-        expected_rhyme_list = ['doubting', 'flouting', 'grouting', 'outing', 'pouting', 'rerouting', 'routing',
-                           'scouting', 'shouting', 'spouting', 'touting']
+        self.assertEqual(sorted(results), rhymes_with_clouds)
+        rhymes_with_sprouting = ['doubting', 'flouting', 'grouting', 'outing', 'pouting', 'rerouting', 'routing',
+                                 'scouting', 'shouting', 'spouting', 'touting']
+        self.assertEqual(sorted(rhymes('sprouting', sample_size=None)), rhymes_with_sprouting)
         results = rhymes('sprouting')
         self.assertNotIn('sprouting', results)
-        self.assertEqual(sorted(results), expected_rhyme_list)
-
+        self.assertEqual(sorted(results), rhymes_with_sprouting)
         results = rhymes('sprouting', sample_size=6)
         self.assertEqual(len(results), 6)
-        self.assertTrue(set(expected_rhyme_list).issuperset(set(results)))
+        self.assertTrue(set(rhymes_with_sprouting).issuperset(set(results)))
+        rhymes_with_either = sorted(rhymes_with_clouds + rhymes_with_sprouting)
+        self.assertEqual(sorted(rhymes(['sprouting', 'clouds'], sample_size=None)), rhymes_with_either)
+        results = rhymes(['clouds', 'sprouting'], sample_size=6)
+        self.assertEqual(len(results), 6)
+        self.assertTrue(set(rhymes_with_either).issuperset(set(results)))
 
     def test_rhyme(self):
         self.assertIsNone(rhyme('metamorphosis'))
@@ -104,7 +112,7 @@ class TestWordSampling(unittest.TestCase):
 
     def test_similar_sounding_words(self):
         similar_sounding_to_homonym_words = ['hastening', 'heightening', 'hominid', 'hominy', 'homonyms', 'summoning',
-                                      'synonym']
+                                             'synonym']
         self.assertEqual(sorted(similar_sounding_words('homonym', sample_size=None)), similar_sounding_to_homonym_words)
         results = similar_sounding_words('homonym')
         self.assertEqual(len(results), 6)
@@ -137,6 +145,14 @@ class TestWordSampling(unittest.TestCase):
         results = similar_meaning_words('vampire', sample_size=6)
         self.assertEqual(len(results), 6)
         self.assertTrue(set(similar_meaning_to_vampire_words).issuperset(set(results)))
+        similar_meaning_to_gothic = ['goth', 'hard', 'eldritch', 'unusual', 'spooky', 'rococo', 'minimalist', 'folky',
+                                     'lovecraftian', 'strange', 'baroque', 'creepy', 'medieval', 'mediaeval']
+        similar_meaning_to_either = sorted(similar_meaning_to_vampire_words + similar_meaning_to_gothic)
+        self.assertEqual(sorted(similar_meaning_words(['vampire', 'gothic'], sample_size=None)),
+                         similar_meaning_to_either)
+        results = similar_meaning_words(['vampire', 'gothic'])
+        self.assertEqual(len(results), 6)
+        self.assertTrue(set(similar_meaning_to_either).issuperset(set(results)))
 
     def test_similar_meaning_word(self):
         self.assertIsNone(similar_meaning_word('nonexistentword'))
@@ -159,6 +175,16 @@ class TestWordSampling(unittest.TestCase):
         results = contextually_linked_words('metamorphosis', sample_size=6)
         self.assertEqual(len(results), 6)
         self.assertTrue(set(contextually_linked_to_metamorphosis).issuperset(set(results)))
+        contextually_linked_to_crepuscular = ['foraging', 'dusk', 'habits', 'twilight', 'diurnal', 'rays', 'dens',
+                                              'forage', 'insects', 'nocturnal', 'overcast', 'predation', 'skipper',
+                                              'sunset', 'moths', 'dawn', 'rodents', 'daylight', 'mating']
+        contextually_linked_to_either = sorted(contextually_linked_to_crepuscular +
+                                               contextually_linked_to_metamorphosis)
+        self.assertEqual(sorted(contextually_linked_words(['crepuscular', 'metamorphosis'], sample_size=None)),
+                         contextually_linked_to_either)
+        results = contextually_linked_words(['crepuscular', 'metamorphosis'])
+        self.assertEqual(len(results), 6)
+        self.assertTrue(set(contextually_linked_to_either).issuperset(set(results)))
 
     def test_contextually_linked_word(self):
         self.assertIsNone(contextually_linked_word('nonexistentword'))
@@ -172,14 +198,13 @@ class TestWordSampling(unittest.TestCase):
         self.assertRaises(ValueError, lambda: phonetically_related_words(False))
         self.assertRaises(ValueError, lambda: phonetically_related_words(None))
         self.assertRaises(ValueError, lambda: phonetically_related_words(['a', 'b', None]))
-        expected_pr_words = ['inchoate', 'opiate', 'payout', 'pet', 'peyote', 'pit', 'poached', 'poets', 'poked',
-                             'post', 'putt']  # for input 'poet'
-        self.assertEqual(sorted(phonetically_related_words('poet', sample_size=None)), expected_pr_words)
+        pr_to_poet = ['inchoate', 'opiate', 'payout', 'pet', 'peyote', 'pit', 'poached', 'poets', 'poked', 'post',
+                      'putt']
+        self.assertEqual(sorted(phonetically_related_words('poet', sample_size=None)), pr_to_poet)
         results = phonetically_related_words('poet', sample_size=5)
         self.assertEqual(len(sorted(results)), 5)
-        self.assertTrue(set(sorted(expected_pr_words)).issuperset(set(results)))
-        expected_pr_words = sorted(expected_pr_words +
-                                   ['eon', 'gnawing', 'knowing', 'kneeing', 'naan', 'non', 'noun'])
+        self.assertTrue(set(sorted(pr_to_poet)).issuperset(set(results)))
+        expected_pr_words = sorted(pr_to_poet + ['eon', 'gnawing', 'knowing', 'kneeing', 'naan', 'non', 'noun'])
         self.assertEqual(sorted(phonetically_related_words(['poet', 'neon'], sample_size=None)), expected_pr_words)
 
     def test_sort_by_rarity(self):
@@ -192,25 +217,36 @@ class TestWordSampling(unittest.TestCase):
         self.assertRaises(ValueError, lambda: related_rare_words(2.5))
         self.assertRaises(ValueError, lambda: related_rare_words(False))
         self.assertRaises(ValueError, lambda: related_rare_words(None))
-        expected_results = ['absurdist', 'antic', 'artless', 'campy', 'canticle', 'cliched', 'clownish', 'cockle',
-                            'cringeworthy', 'hackneyed', 'histrionic', 'humourous', 'jokey', 'parodic', 'puerile',
-                            'risible', 'sophomoric', 'surrealistic', 'uneconomical', 'uproarious']
+        rr_to_comical = ['absurdist', 'antic', 'artless', 'campy', 'canticle', 'cliched', 'clownish', 'cockle',
+                         'cringeworthy', 'hackneyed', 'histrionic', 'humourous', 'jokey', 'parodic', 'puerile',
+                         'risible', 'sophomoric', 'surrealistic', 'uneconomical', 'uproarious']
         results = related_rare_words('comical', sample_size=None)
         self.assertEqual(len(results), 20)
-        self.assertEqual(sorted(results), expected_results)
+        self.assertEqual(sorted(results), rr_to_comical)
         results = related_rare_words('comical', sample_size=None, rare_word_population_max=None)
         self.assertGreater(len(results), 20)
-        self.assertTrue(set(results).issuperset(set(expected_results)))
+        self.assertTrue(set(results).issuperset(set(rr_to_comical)))
         results = related_rare_words('comical', sample_size=6)
         self.assertEqual(len(results), 6)
         self.assertTrue(set(results).issuperset(set(results)))
+
+        rr_to_dinosaur = ['allosaurus', 'apatosaurus', 'archaeopteryx', 'brachiosaurus', 'clade', 'crocodilian',
+                          'diplodocus', 'dodos', 'humidor', 'ichthyosaur', 'iguanodon', 'megafauna', 'peccary',
+                          'pterosaur', 'robustus', 'sauropod', 'stevedore', 'theropod', 'trilobite', 'tyrannosaur']
+        rr_to_either = sorted(rr_to_comical + rr_to_dinosaur)
+        self.assertEqual(sorted(related_rare_words(['comical', 'dinosaur'], sample_size=None)), rr_to_either)
+        results = related_rare_words(['comical', 'dinosaur'])
+        self.assertEqual(len(results), 8)
+        self.assertTrue(set(rr_to_either).issuperset(set(results)))
 
     def test_related_rare_word(self):
         result_possibilities = ['artless', 'canticle', 'clownish', 'histrionic', 'humourous', 'parodic', 'risible',
                                 'sophomoric', 'uneconomical', 'uproarious']
         self.assertIn(related_rare_word('comical'), result_possibilities)
 
+
 class TestPoemGenerator(unittest.TestCase):
+
     def get_possible_word_list(self, input_word_list):
         possible_line_enders = ['.', ',', '!', '?', '...']
         possible_words = input_word_list.copy()

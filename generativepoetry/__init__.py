@@ -24,6 +24,7 @@ line_indents = ['', '    ', '         ']
 common_words = ["the", "with", "in", "that", "not", "a", "an"]
 word_frequency_threshold = 4e-08
 str_or_list_of_str = TypeVar('str_or_list_of_str', str, List[str])
+annoying_words = ['thew', 'iii', 'arr']
 
 if platform.system() == 'Windows':
     raise Exception('Your OS is not currently supported.')
@@ -114,6 +115,9 @@ def too_similar(word1: str, comparison_val: str_or_list_of_str) -> bool:
         if (len(word1) > 2 and len(word2) > 2) and ((word1[-2] == 'e' and word2 + 'd' == word1) or
             (word2[-2] == 'e' and word1 + 'd' == word2)):  # Past tense
             return True
+        too_similar_case = ['the', 'thee', 'them']
+        if word1 in too_similar_case and word2 in too_similar_case:
+            return True
     return False
 
 
@@ -127,7 +131,7 @@ def filter_word(string, spellcheck=True, exclude_words=[]):
                        'of' for some reason.
     :param exclude_words: list of words to filter out
     """
-    exclude_words.extend(['thew', 'iii'])  # Some words Datamuse tends to return that disruptive poetic flow
+    exclude_words.extend(annoying_words)  # Some words Datamuse tends to return that disruptive poetic flow
     validate_str(string)
     if len(string) < 3:
         return False
@@ -202,7 +206,7 @@ def extract_sample(word_list: list, sample_size: Optional[int] = None) -> list:
     if not sample_size or len(word_list) <= sample_size:
         return random.sample(word_list, k=len(word_list))
     else:
-        sample : List[str] = []
+        sample: List[str] = []
         while len(sample) < sample_size and len(word_list) > 0:
             sample += [word for word in random.sample(word_list, k=sample_size) if word not in sample]
             word_list = [word for word in word_list if word not in sample]
@@ -228,7 +232,8 @@ def similar_sounding_words(input_val: str_or_list_of_str, sample_size: Optional[
     ss_words: List[str] = []
     for input_word in input_words:
         response = api.words(sl=input_word, max=datamuse_api_max) if datamuse_api_max else api.words(sl=input_word)
-        ss_words.extend(filter_word_list([obj['word'] for obj in response], exclude_words=[input_words + ss_words]))
+        exclude_words = input_words + ss_words
+        ss_words.extend(filter_word_list([obj['word'] for obj in response], exclude_words=exclude_words))
     return extract_sample(ss_words, sample_size=sample_size)
 
 
@@ -261,7 +266,8 @@ def similar_meaning_words(input_val: str_or_list_of_str, sample_size: Optional[i
     for input_word in input_words:
         response = api.words(ml=input_word, max=datamuse_api_max) if datamuse_api_max else api.words(ml=input_word)
         exclude_words = sm_words.copy()
-        sm_words.extend(filter_word_list([obj['word'] for obj in response], spellcheck=False, exclude_words=exclude_words))
+        sm_words.extend(filter_word_list([obj['word'] for obj in response], spellcheck=False,
+                                         exclude_words=exclude_words))
     return extract_sample(sm_words, sample_size=sample_size)
 
 
@@ -290,7 +296,7 @@ def contextually_linked_words(input_val: str_or_list_of_str, sample_size: Option
                              the sample pool and the sample size.
     """
     input_words = validate_str_or_list_of_str(input_val)
-    cl_words : List[str] = []
+    cl_words: List[str] = []
     for input_word in input_words:
         validate_word(input_word)
         response = api.words(rel_trg=input_word, max=datamuse_api_max) if datamuse_api_max else \
@@ -329,7 +335,7 @@ def frequently_following_words(input_val: str_or_list_of_str, sample_size: Optio
                                   size of both the sample pool and the sample size.
     """
     input_words = validate_str_or_list_of_str(input_val)
-    ff_words : List[str] = []
+    ff_words: List[str] = []
     for input_word in input_words:
         response = api.words(lc=input_word, max=datamuse_api_max) if datamuse_api_max else api.words(lc=input_word)
         # Filter but don't use spellcheck -- it removes important words (for the markov chain use case) like 'of'
@@ -369,7 +375,7 @@ def phonetically_related_words(input_val: str_or_list_of_str, sample_size=None, 
                         meaning words.
     """
     input_words = validate_str_or_list_of_str(input_val)
-    pr_words : List[str] = []
+    pr_words: List[str] = []
     for word in input_words:
         pr_words.extend(rhymes(word, sample_size=sample_size))
         exclude_words = pr_words.copy()
@@ -388,18 +394,21 @@ def related_rare_words(input_val: str_or_list_of_str, sample_size: Optional[int]
     :param input_val: the word or words in relation to which this function is looking up related rare words
     :param sample_size: If provided, return a random sample of this many elements. If this number is greater than
                         the length of rare word population size, then just return a shuffled copy of that.
-    :param rare_word_population_max: specifies the maximum number of related words to subsample from. The rare word
-                                     population is sorted from rarest to most common.
+    :param rare_word_population_max: specifies the maximum number of related words to subsample from per word.
+    `                                The rare word population is sorted from rarest to most common. If sample_size is
+                                     null, the max results returned by this function is 2 times this number.
     """
     input_words = validate_str_or_list_of_str(input_val)
-    results : List[str] = []
+    results: List[str] = []
     for input_word in input_words:
-        related_words = phonetically_related_words(input_word) + \
-                        contextually_linked_words(input_word, sample_size=None, datamuse_api_max=100) + \
-                        similar_meaning_words(input_word, sample_size=None, datamuse_api_max=100)
-        results.extend([word for word in related_words if not too_similar(input_word, word)])
-        random.shuffle(results)
-    return extract_sample(sort_by_rarity(results)[:rare_word_population_max], sample_size=sample_size)
+        related_words = phonetically_related_words(input_word)
+        related_words.extend(word for word in contextually_linked_words(
+            input_word, sample_size=None, datamuse_api_max=100) if word not in related_words)
+        related_words.extend(word for word in similar_meaning_words(
+            input_word, sample_size=None, datamuse_api_max=100) if word not in related_words)
+        related_words = [word for word in related_words if not too_similar(input_word, word)]
+        results.extend(sort_by_rarity(related_words)[:rare_word_population_max])
+    return extract_sample(results, sample_size=sample_size)
 
 
 def related_rare_word(input_word: str, rare_word_population_max: int = 10) -> Optional[str]:
