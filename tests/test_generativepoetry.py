@@ -1,8 +1,8 @@
 import re
 import unittest
-from generativepoetry import *
-from generativepoetry import validate_str, validate_str_list, has_invalid_characters, validate_word, too_similar, \
-                             filter_word, filter_word_list, extract_sample, sort_by_rarity
+from generativepoetry.lexigen import *
+from generativepoetry.lexigen import validate_str, validate_str_list, has_invalid_characters, validate_word, \
+                                     too_similar,  filter_word, filter_word_list, extract_sample, sort_by_rarity
 
 
 class TestValidationAndFilters(unittest.TestCase):
@@ -251,7 +251,7 @@ class TestWordSampling(unittest.TestCase):
         self.assertIn(related_rare_word('comical'), result_possibilities)
 
 
-class TestPoemGenerator(unittest.TestCase):
+class TestBasicPoemGenerator(unittest.TestCase):
 
     def get_possible_word_list(self, input_word_list):
         possible_line_enders = ['.', ',', '!', '?', '...']
@@ -266,9 +266,10 @@ class TestPoemGenerator(unittest.TestCase):
         input_word_list = ['crypt', 'crypts', 'crypt', 'ghost', 'ghosts', 'lost', 'time', 'times']
         possible_words = self.get_possible_word_list(input_word_list)
         possible_connectors = [',', '...', '&', 'and', 'or', '->']
+        poemgen = Poem()
         for i in range(5):  # Generate 5 random lines of poetry and test them.
             max_line_length = 35 + 5 * i
-            poem_line = poem_line_from_word_list(input_word_list, max_line_length=max_line_length)
+            poem_line = poemgen.poem_line_from_word_list(input_word_list, max_line_length=max_line_length)
             # First character of line should not be a space as indents are handled by the poem_from_word_list function
             self.assertNotEqual(poem_line[0], ' ')
             # Should not have newlines as these are handled by the poem_from_word_list function
@@ -287,10 +288,10 @@ class TestPoemGenerator(unittest.TestCase):
 
     def test_poem_from_word_list(self):
         input_word_list = ['crypt', 'sleep', 'ghost', 'time']
-        poems = [poem_from_word_list(input_word_list, limit_line_to_one_input_word=True),
-                 poem_from_word_list(input_word_list, lines=8)]
+        poemgen = Poem()
+        poems = [poemgen.poem_from_word_list(input_word_list, limit_line_to_one_input_word=True),
+                 poemgen.poem_from_word_list(input_word_list, lines=8)]
         expected_newlines_in_poem = [5, 7]
-
         for i, poem in enumerate(poems):
             # 5 lines = 5 newline characters since one ends the poem
             self.assertEqual(poem.count('\n'), expected_newlines_in_poem[i])
