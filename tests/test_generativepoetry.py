@@ -1,3 +1,4 @@
+import itertools
 import re
 import unittest
 from generativepoetry.lexigen import *
@@ -286,7 +287,7 @@ class TestWordSampling(unittest.TestCase):
         self.assertIn(related_rare_word('comical'), result_possibilities)
 
 
-class TestBasicPoemGenerator(unittest.TestCase):
+class TestPoemGenerator(unittest.TestCase):
 
     def get_possible_word_list(self, input_word_list):
         possible_line_enders = ['.', ',', '!', '?', '...']
@@ -346,7 +347,35 @@ class TestBasicPoemGenerator(unittest.TestCase):
         pass
 
     def test_poem_line_from_markov(self):
-        pass
+        pgen = PoemGenerator()
+        pgen.currently_generating_poem = Poem(['pataphysics', 'Dadaist'], [])
+        words_for_sampling = ['fervent', 'mutants', 'dazzling', 'flying', 'saucer', 'milquetoast']
+        line = pgen.poem_line_from_markov('surrealist', num_words=8, rhyme_with=None,
+                                          words_for_sampling=words_for_sampling, max_line_length=40)
+        words = line.split(' ')
+        self.assertLessEqual(len(line), 40)
+        self.assertLessEqual(len(words), 8)
+        self.assertNotIn(words[-1], pgen.common_words)
+        similarity_checks = list(itertools.combinations(words, 2))
+        for word_pair in similarity_checks:
+            self.assertFalse(too_similar(word_pair[0], word_pair[1]))
+        line = pgen.poem_line_from_markov('surrealist', num_words=8, rhyme_with='bell',
+                                          words_for_sampling=words_for_sampling, max_line_length=None)
+        words = line.split(' ')
+        self.assertEqual(len(words), 8)
+        self.assertIn(words[-1], rhymes('bell', sample_size=None))
+        self.assertNotIn(line.split(' ')[-1], pgen.common_words)
+        similarity_checks = list(itertools.combinations(words, 2))
+        for word_pair in similarity_checks:
+            self.assertFalse(too_similar(word_pair[0], word_pair[1]))
+        line = pgen.poem_line_from_markov('surrealist', num_words=8, rhyme_with='unrhymable',
+                                          words_for_sampling=words_for_sampling, max_line_length=None)
+        words = line.split(' ')
+        self.assertEqual(len(words), 8)
+        self.assertNotIn(words[-1], pgen.common_words)
+        similarity_checks = list(itertools.combinations(words, 2))
+        for word_pair in similarity_checks:
+            self.assertFalse(too_similar(word_pair[0], word_pair[1]))
 
     def test_random_nonrhyme(self):
         with open('tests/random_nonrhyme_possible_results.txt') as f:
@@ -361,10 +390,30 @@ class TestBasicPoemGenerator(unittest.TestCase):
             self.assertIn(result, possible_results)
 
     def test_nonlast_word(self):
-        pass
+        with open('tests/random_nonrhyme_possible_results.txt') as f:
+            possible_randalg_results = f.read().splitlines()
+        words_for_sampling = ['fervent', 'mutants', 'dazzling', 'flying', 'saucer', 'milquetoast']
+        pgen = PoemGenerator()
+        input_words = ['pataphysics', 'Dadaist']
+        pgen.currently_generating_poem = Poem(input_words, [])
+        for i in range(2):
+            result = pgen.nonlast_word_of_markov_line(input_words[i:], words_for_sampling)
+            self.assertTrue(result in possible_randalg_results or result in words_for_sampling)
+            self.assertIn(pgen.nonlast_word_of_markov_line(input_words[i:]), possible_randalg_results)
 
     def test_last_word(self):
-        pass
+        with open('tests/random_nonrhyme_possible_results.txt') as f:
+            possible_randalg_results = f.read().splitlines()
+        pgen = PoemGenerator()
+        input_words = ['pataphysics', 'Dadaist']
+        pgen.currently_generating_poem = Poem(['star', 'chime'], [])
+        for i in range(2):
+            result = pgen.last_word_of_markov_line(input_words[i:], max_length=6)
+            self.assertIn(result, possible_randalg_results)
+            self.assertLessEqual(len(result), 6)
+            rhyming_result = pgen.last_word_of_markov_line(input_words[i:], rhyme_with='shudder', max_length=10)
+            self.assertLessEqual(len(rhyming_result), 10)
+            self.assertIn(rhyming_result, rhymes('shudder', sample_size=None))
 
     def test_print_poem(self):
         pass
