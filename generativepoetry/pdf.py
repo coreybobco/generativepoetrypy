@@ -1,5 +1,6 @@
 import random
 import string
+from os.path import isfile
 from prosedecomposer import *
 from reportlab.pdfgen import canvas
 from generativepoetry.lexigen import filter_word_list
@@ -56,6 +57,13 @@ class PDFGenerator:
             r,g,b = random.random(), random.random(), random.random()
         return r,g,b
 
+    def get_filename(self, input_words, file_extension='pdf'):
+        sequence = ""
+        filename = f"{','.join(input_words)}{sequence}.{file_extension}"
+        while isfile(filename):
+            sequence = int(sequence or 0) + 1
+            filename = f"{','.join(input_words)}({sequence}).{file_extension}"
+        return filename
 
 class ChaosPoemGenerator(PDFGenerator):
 
@@ -119,11 +127,11 @@ class MarkovPoemGenerator(PDFGenerator):
 
     def generate_pdf(self, orientation='landscape'):
         if orientation.lower() == 'landscape':
-            num_lines = 16
+            num_lines = 12
             y_coordinate = 580
-            min_line_words = 8
-            max_line_words = 13
-            max_line_length = 80
+            min_line_words = 6
+            max_line_words = 10
+            max_line_length = 60
         elif orientation.lower() == 'portrait':
             num_lines = 24
             y_coordinate = 780
@@ -138,10 +146,11 @@ class MarkovPoemGenerator(PDFGenerator):
         poem = poemgen.poem_from_markov(input_words=input_words, min_line_words=min_line_words, num_lines=num_lines,
                                         max_line_words=max_line_words, max_line_length=max_line_length)
         font_choice, last_font_choice = None, None
+        filename = self.get_filename(input_words)
         if orientation == 'landscape':
-            c = canvas.Canvas(f"{','.join(input_words)}.pdf", pagesize=landscape(letter))
+            c = canvas.Canvas(filename, pagesize=landscape(letter))
         else:
-            c = canvas.Canvas(f"{','.join(input_words)}.pdf")
+            c = canvas.Canvas(filename)
         for line in poem.lines:
             line = random.choice([line, line, line, line.upper()])
             font_size = self.get_font_size(line, regular_font_sizes)

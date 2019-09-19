@@ -18,7 +18,9 @@ __all__ = ['sort_by_rarity', 'rhymes', 'rhyme', 'similar_sounding_word', 'simila
 api = datamuse.Datamuse()
 word_frequency_threshold = 4e-08
 str_or_list_of_str = TypeVar('str_or_list_of_str', str, List[str])
-unfitting_words = ['thew', 'iii', 'arr', 'atty', 'haj', 'pao', 'gea', 'ning', 'mor', 'mar', 'iss', 'eee', 'pls']
+unfitting_words = ['thew', 'iii', 'arr', 'atty', 'haj', 'pao', 'gea', 'ning', 'mor', 'mar', 'iss', 'eee', 'pls', 'fia',
+                   'gar', 'ism', 'schwa', 'sor', 'bpa', 'saba', 'ria', 'nds', 'moi', 'esc', 'sabra', 'cim', 'rha',
+                   'dist']
 if platform.system() == 'Windows':
     raise Exception('Your OS is not currently supported.')
 elif platform.system() == 'Darwin':
@@ -31,7 +33,6 @@ else:
         hobj = hunspell.HunSpell('/usr/share/hunspell/en_US.dic', '/usr/share/hunspell/en_US.aff')
     except Exception:
         raise Exception('This module requires the installation of the hunspell dictionary.')
-
 
 def validate_str(input_val, msg='Not a string'):
     """Validate the input argument by checking if it is a string.
@@ -103,7 +104,7 @@ def too_similar(word1: str, comparison_val: str_or_list_of_str) -> bool:
             return True
         if word1 + 's' == word2 or word2 + 's' == word1:  # Plural, probably
             return True
-        if word1 + 'ly' == word2 or word2 + 'ly' == word1:  # Adverb form of an adjective
+        if word1 + 'ly' == word2 or word2 + 'ly' == word1:  # Adverb form of an adjective
             return True
         if (len(word1) > 2 and len(word2) > 2) and ((word1[-2] == 'e' and word2 + 'd' == word1) or
             (word2[-2] == 'e' and word1 + 'd' == word2)):  # Past tense

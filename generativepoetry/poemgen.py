@@ -1,3 +1,4 @@
+import itertools
 import random
 from .lexigen import *
 from .lexigen import has_invalid_characters, too_similar
@@ -15,7 +16,7 @@ class Poem:
         return self.raw_text
 
     def update(self):
-        self.raw_text = '\n'.join(lines)
+        self.raw_text = '\n'.join(self.lines)
 
     @property
     def previous_line(self):
@@ -25,15 +26,17 @@ class Poem:
 
 
 class PoemGenerator:
-    connectors = [' ', '   ', '...   ', random.choice([' & ', ' and ']), '  or  ', ' or ']
+    basic_connectors = [' ', '   ', '...   ', random.choice([' & ', ' and ']), '  or  ', ' or ']
+    markov_connectors = ['and',  'or', 'as', 'like', 'with']
     line_enders = ['.', ', ', '!', '?', '', ' or', '...']
+    markov_line_enders = ['', '', ',', ',', '!', '.', '?']
     line_indents = ['', '    ', '         ']
     common_words = ["the", "with", "in", "that", "not", "a", "an", "of", "for", "as", "like", "on"]
     last_algorithms_used_to_reach_next_word = (None, None)
     currently_generating_poem = None
     last_poem = None
 
-    def random_nonrhyme(self, previous_words: List[str]) -> str:
+    def random_nonrhyme(self, previous_words: List[str], rhymable: bool=False) -> str:
         """Return a random result of a random function that hits Project Datamuse API (rhyme function excluded)
 
         This function is primarily designed for use by the poem_line_from_markov function, but it may have other
@@ -44,6 +47,7 @@ class PoemGenerator:
         found that is both not too similar to preceding words and not too similar to the last line's last word.
 
         :param previous_words: an ordered list of previous words of generated poem line
+        :param rhymable: result must have a valid rhyme
         """
         result = None
         while result is None:
@@ -73,10 +77,10 @@ class PoemGenerator:
             if possible_result and not too_similar(possible_result, previous_words) and \
                     not(len(self.currently_generating_poem.lines) > 0 and
                         too_similar(possible_result, self.currently_generating_poem.previous_line.split(' ')) and
-                        not has_invalid_characters(possible_result)):
+                        not has_invalid_characters(possible_result)) and not(rhymable and not rhyme(possible_result)):
                 # Is the word too similar to another word in the line or the previous line?
                 # Does the word have numbers or spaces for some reason? (extremely rare)
-                # If so, keep trying; otherwise exit the loop and return the word
+                # If so, keep trying; otherwise exit the loop and return the word)
                 result = possible_result
         return result
 
@@ -86,10 +90,15 @@ class PoemGenerator:
 
         :param previous_words: an ordered list of previous words of generated poem line
         :param rhyme_with: the last word of the last line of the poem, if it exists
+        :param max_line_legnth: an upper limit in characters for the word
         """
         word = None
         if rhyme_with:
-            word = rhyme(rhyme_with)
+            word = word = rhyme(rhyme_with)
+            # if the word is a common word keep trying
+            while word in self.common_words:
+                word = rhyme(rhyme_with)
+            # But if there's no rhyme result try another method altogether
             if not word:
                 while word is None or (max_length and len(word) > max_length) or word in self.common_words \
                         or too_similar(word, previous_words):
@@ -97,7 +106,8 @@ class PoemGenerator:
         else:
             while word is None or (max_length and len(word) > max_length) or word in self.common_words \
                     or too_similar(word, previous_words):
-                word = self.random_nonrhyme(previous_words)
+                # Maybe revisit defaulting rhymable to true here
+                word = self.random_nonrhyme(previous_words, rhymable=True)
         return word
 
     def nonlast_word_of_markov_line(self, previous_words: List[str], words_for_sampling: List[str] = []) -> str:
@@ -117,7 +127,10 @@ class PoemGenerator:
             threshold = .6 if len(words_for_sampling) else 1
             while word is None or too_similar(word,  previous_words):
                 if random.random() > threshold:
-                    word = random.choice(words_for_sampling)
+                    if random.random() <= .5:
+                        word = random.choice(self.markov_connectors)
+                    else:
+                        word = random.choice(words_for_sampling)
                 else:
                     word = self.random_nonrhyme(previous_words)
         return word
@@ -140,8 +153,8 @@ class PoemGenerator:
         """
         output_words, previous_word = [starting_word], starting_word
         for i in range(num_words - 1):
-            if (i == num_words - 2) or (max_line_length and (max_line_length > 13 and
-                                                             len(' '.join(output_words)) >= max_line_length - 13)):
+            if (i == num_words - 2) or (max_line_length and (max_line_length > 14 and
+                                                             len(' '.join(output_words)) >= max_line_length - 14)):
                 # Checks if if it's the last word--the limit can be determined by either word count or character count
                 max_length = 12 if max_line_length else None
                 word = self.last_word_of_markov_line(output_words, rhyme_with=rhyme_with, max_length=12)
@@ -155,17 +168,35 @@ class PoemGenerator:
     def poem_from_markov(self, input_words, num_lines=10, min_line_words: int=5, max_line_words: int=9,
                          max_line_length: Optional[int] = 35) -> str:
         words_for_sampling = input_words + phonetically_related_words(input_words)
+
+        # Check for undesirable similarity overlap in the words for sampling list
+        similarity_checks = list(itertools.combinations(words_for_sampling, 2))
+        words_removed = []
+        for word_pair in similarity_checks:
+            if (not(word_pair[0] in words_removed) or not(word_pair[1] in words_removed)) and \
+                    too_similar(word_pair[0], word_pair[1]):
+                words_removed.append(random.choice([word_pair[0], word_pair[1]]))
+                words_for_sampling.remove(words_removed[-1])
+
         self.currently_generating_poem = Poem(input_words, words_for_sampling)
         last_line_last_word = ''
         random.shuffle(words_for_sampling)
         print(words_for_sampling)
         for i in range(num_lines):
             rhyme_with = last_line_last_word if i % 2 == 1 else None
-            line = self.poem_line_from_markov(words_for_sampling.pop(), words_for_sampling=words_for_sampling,
+            line_starter = words_for_sampling.pop()
+            while i > 1 and too_similar(line_starter, self.currently_generating_poem.lines[i - 1].split(' ')[0]):
+                # while statement prevents repetition of line starters
+                line_starter = words_for_sampling.pop()
+            line = self.poem_line_from_markov(line_starter, words_for_sampling=words_for_sampling,
                                               num_words=random.randint(min_line_words, max_line_words),
                                               rhyme_with=rhyme_with, max_line_length=max_line_length)
             self.currently_generating_poem.lines.append(line)
+            print(line)
             last_line_last_word = line.split(' ')[-1]
+        for i, line in enumerate(self.currently_generating_poem.lines):
+            self.currently_generating_poem.lines[i] = line + random.choice(self.markov_line_enders)
+            print(line)
         self.last_poem = self.currently_generating_poem
         self.currently_generating_poem = None
         return self.last_poem
