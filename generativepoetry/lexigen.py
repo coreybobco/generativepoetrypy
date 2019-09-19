@@ -10,7 +10,6 @@ from datamuse import datamuse
 __author__ = 'Corey Bobco'
 __email__ = 'corey.bobco@gmail.com'
 __version__ = '0.1.3'
-
 __all__ = ['sort_by_rarity', 'rhymes', 'rhyme', 'similar_sounding_word', 'similar_sounding_words',
            'similar_meaning_word', 'similar_meaning_words', 'contextually_linked_word', 'contextually_linked_words',
            'frequently_following_words', 'frequently_following_word', 'phonetically_related_words',
@@ -19,8 +18,7 @@ __all__ = ['sort_by_rarity', 'rhymes', 'rhyme', 'similar_sounding_word', 'simila
 api = datamuse.Datamuse()
 word_frequency_threshold = 4e-08
 str_or_list_of_str = TypeVar('str_or_list_of_str', str, List[str])
-unfitting_words = ['thew', 'iii', 'arr', 'atty', 'haj', 'pao', 'gea', 'ning', 'mor', 'mar', 'iss', 'eee']
-
+unfitting_words = ['thew', 'iii', 'arr', 'atty', 'haj', 'pao', 'gea', 'ning', 'mor', 'mar', 'iss', 'eee', 'pls']
 if platform.system() == 'Windows':
     raise Exception('Your OS is not currently supported.')
 elif platform.system() == 'Darwin':
@@ -337,8 +335,9 @@ def frequently_following_words(input_val: str_or_list_of_str, sample_size: Optio
         exclude_words = ff_words.copy()
         ff_words.extend(filter_word_list([obj['word'] for obj in response], spellcheck=False,
                                          exclude_words=exclude_words))
+        random.shuffle(ff_words)
     if sample_size and sample_size > 4:
-        # Pick 4 at random from the whole and the rest from the top X rarest following words
+        # Pick 3 at random from the top X rarest and the rest from the whole
         # Slice one list of api results using the default order and another using a rarity baeed order
         if not datamuse_api_max:
             ending_index = 20
@@ -347,7 +346,7 @@ def frequently_following_words(input_val: str_or_list_of_str, sample_size: Optio
         else:
             ending_index = datamuse_api_max
         return extract_sample(ff_words[:ending_index], sample_size=sample_size - 3) + \
-               extract_sample(sort_by_rarity(ff_words)[:ending_index], sample_size=sample_size - 3)
+            extract_sample(sort_by_rarity(ff_words)[:ending_index], sample_size=3)
     return extract_sample(ff_words, sample_size=sample_size)  # Standard sampling
 
 
@@ -362,12 +361,6 @@ def frequently_following_word(input_word, datamuse_api_max=10) -> Optional[str]:
     result: Optional[str] = next(iter(frequently_following_words(input_word, sample_size=1,
                                                                  datamuse_api_max=datamuse_api_max)), None)
     return result
-    # if weight_by_rarity:
-    #     word = random.choice(sort_by_rarity(frequently_following_words(
-    #         input_word, sample_size=None, datamuse_api_max=20))[:4])
-    # else:
-    # word = next(iter(frequently_following_words(input_word, sample_size=1, datamuse_api_max=datamuse_api_max)), None)
-    # return word
 
 
 def phonetically_related_words(input_val: str_or_list_of_str, sample_size=None, datamuse_api_max=50) -> list:

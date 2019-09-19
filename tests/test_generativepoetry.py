@@ -3,6 +3,7 @@ import unittest
 from generativepoetry.lexigen import *
 from generativepoetry.lexigen import validate_str, validate_str_list, has_invalid_characters, validate_word, \
                                      too_similar,  filter_word, filter_word_list, extract_sample, sort_by_rarity
+from generativepoetry.poemgen import *
 
 
 class TestValidationAndFilters(unittest.TestCase):
@@ -193,10 +194,44 @@ class TestWordSampling(unittest.TestCase):
         self.assertIn(contextually_linked_word('metamorphosis'), contextually_linked_to_metamorphosis)
 
     def test_frequently_following_words(self):
-        pass
+        self.assertEqual(frequently_following_words('nonexistentword'), [])
+        frequently_following_magic = ['about', 'against', 'among', 'and', 'angle', 'are', 'art', 'arts', 'box',
+                                      'bullet', 'bullets', 'but', 'can', 'carpet', 'charm', 'charms', 'circle', 'city',
+                                      'could', 'flute', 'for', 'formula', 'formulas', 'from', 'had', 'has', 'influence',
+                                      'into', 'johnson', 'key', 'kingdom', 'lamp', 'lantern', 'marker', 'markers',
+                                      'may', 'mirror', 'moment', 'mountain', 'name', 'number', 'numbers', 'potion',
+                                      'power', 'powers', 'realism', 'ring', 'rites', 'school', 'show',  'spell',
+                                      'spells', 'square', 'squares', 'sword', 'than', 'that', 'the', 'touch', 'trick',
+                                      'tricks', 'wand', 'was', 'were', 'when', 'which', 'will', 'with', 'word', 'words',
+                                      'world', 'would']
+        results = frequently_following_words('magic', sample_size=None)
+        self.assertEqual(sorted(results), frequently_following_magic)
+        results = frequently_following_words('magic', sample_size=None, datamuse_api_max=None)
+        self.assertGreater(len(results), 20)
+        self.assertTrue(set(results).issuperset(set(frequently_following_magic)))
+        results = frequently_following_words('magic', sample_size=6)
+        self.assertEqual(len(results), 6)
+        self.assertTrue(set(frequently_following_magic).issuperset(set(results)))
+        frequently_following_Dadaist = ['activities', 'and', 'art', 'artist', 'artists', 'collage', 'collages',
+                                        'experiments', 'group', 'hugo', 'influence', 'kurt', 'manifesto', 'marcel',
+                                        'movement', 'nihilism', 'painter', 'performance', 'play', 'poem', 'poems',
+                                        'poet', 'poetry', 'poets', 'raoul', 'review', 'spirit', 'tradition', 'tristan',
+                                        'who', 'work', 'works']
+        ff_either = sorted(frequently_following_magic + [word for word in frequently_following_Dadaist
+                                                         if word not in frequently_following_magic])
+        self.assertEqual(sorted(frequently_following_words(['magic', 'Dadaist'], sample_size=None)), ff_either)
+        results = frequently_following_words(['magic', 'Dadaist'])
+        self.assertEqual(len(results), 8)
+        self.assertTrue(set(ff_either).issuperset(set(results)))
 
     def test_frequently_following_word(self):
-        pass
+        self.assertIsNone(contextually_linked_word('nonexistentword'))
+        frequently_following_Dadaist = ['activities', 'and', 'art', 'artist', 'artists', 'collage', 'collages',
+                                        'experiments', 'group', 'hugo', 'influence', 'kurt', 'manifesto', 'marcel',
+                                        'movement', 'nihilism', 'painter', 'performance', 'play', 'poem', 'poems',
+                                        'poet', 'poetry', 'poets', 'raoul', 'review', 'spirit', 'tradition', 'tristan',
+                                        'who', 'work', 'works']
+        self.assertIn(frequently_following_word('Dadaist'), frequently_following_Dadaist)
 
     def test_phonetically_related_words(self):
         self.assertRaises(ValueError, lambda: phonetically_related_words(2))
@@ -266,10 +301,10 @@ class TestBasicPoemGenerator(unittest.TestCase):
         input_word_list = ['crypt', 'crypts', 'crypt', 'ghost', 'ghosts', 'lost', 'time', 'times']
         possible_words = self.get_possible_word_list(input_word_list)
         possible_connectors = [',', '...', '&', 'and', 'or', '->']
-        poemgen = Poem()
+        pgen = PoemGenerator()
         for i in range(5):  # Generate 5 random lines of poetry and test them.
             max_line_length = 35 + 5 * i
-            poem_line = poemgen.poem_line_from_word_list(input_word_list, max_line_length=max_line_length)
+            poem_line = pgen.poem_line_from_word_list(input_word_list, max_line_length=max_line_length)
             # First character of line should not be a space as indents are handled by the poem_from_word_list function
             self.assertNotEqual(poem_line[0], ' ')
             # Should not have newlines as these are handled by the poem_from_word_list function
@@ -288,9 +323,9 @@ class TestBasicPoemGenerator(unittest.TestCase):
 
     def test_poem_from_word_list(self):
         input_word_list = ['crypt', 'sleep', 'ghost', 'time']
-        poemgen = Poem()
-        poems = [poemgen.poem_from_word_list(input_word_list, limit_line_to_one_input_word=True),
-                 poemgen.poem_from_word_list(input_word_list, lines=8)]
+        pgen = PoemGenerator()
+        poems = [pgen.poem_from_word_list(input_word_list, limit_line_to_one_input_word=True),
+                 pgen.poem_from_word_list(input_word_list, num_lines=8)]
         expected_newlines_in_poem = [5, 7]
         for i, poem in enumerate(poems):
             # 5 lines = 5 newline characters since one ends the poem
@@ -306,6 +341,33 @@ class TestBasicPoemGenerator(unittest.TestCase):
             self.assertEqual(len(last_line_words), 2)
             self.assertIn(last_line_words[0], input_word_list[:-1])
             self.assertEqual(last_line_words[1], 'time')
+
+    def test_poem_from_markov(self):
+        pass
+
+    def test_poem_line_from_markov(self):
+        pass
+
+    def test_random_nonrhyme(self):
+        with open('tests/random_nonrhyme_possible_results.txt') as f:
+            # There are over 5000 possible results even with rare words as input since this function sometimes calls
+            # a random lexigen function on the result of a random lexigen function (and there are already ~70 possible
+            # results even if only one function is called.
+            possible_results = f.read().splitlines()
+        pgen = PoemGenerator()
+        pgen.currently_generating_poem = Poem(['pataphysics', 'Dadaist'], [])
+        for i in range(6):
+            result = pgen.random_nonrhyme(['pataphysics', 'Dadaist'])
+            self.assertIn(result, possible_results)
+
+    def test_nonlast_word(self):
+        pass
+
+    def test_last_word(self):
+        pass
+
+    def test_print_poem(self):
+        pass
 
 
 if __name__ == '__main__':

@@ -9,6 +9,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.pagesizes import letter, landscape
 from nltk.corpus import stopwords
 
+
 class PDFGenerator:
     standard_font_sizes = [12, 14, 16, 18, 24, 32]
     font_choices = ['arial', 'arial-bold', 'arial-italic', 'arial-bolditalic',
