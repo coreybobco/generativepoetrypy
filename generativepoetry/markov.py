@@ -3,7 +3,8 @@ from .lexigen import *
 from .utils import *
 
 class MarkovWordGenerator:
-    common_words = ["the", "with", "in", "that", "not", "a", "an", "of", "for", "as", "like", "on"]
+    common_words = ["the", "with", "in", "that", "not", "a", "an", "of", "for", "as", "like", "on", 'his', 'the',
+                    'your', 'my', 'their']
     connector_choices = ['and', 'or', 'as', 'like', 'with']
     last_algorithms_used_to_reach_next_word = (None, None)
     previous_lines = []
@@ -50,7 +51,8 @@ class MarkovWordGenerator:
                 possible_result = random_algorithm(input_word)
                 self.last_algorithms_used_to_reach_next_word = (random_algorithm, None)
             if possible_result and not too_similar(possible_result, previous_words) and \
-                    not (len(self.previous_lines) > 0 and too_similar(possible_result, self.previous_lines.split(' '))
+                    not (len(self.previous_lines) > 0 and
+                         too_similar(possible_result, self.previous_lines[-1].split(' '))
                          and not has_invalid_characters(possible_result)) and \
                     not (rhymable and not rhyme(possible_result)):
                 # Is the word too similar to another word in the line or the previous line?
@@ -70,7 +72,7 @@ class MarkovWordGenerator:
         word = None
         if rhyme_with:
             word = word = rhyme(rhyme_with)
-            # if the word is a common word keep trying
+            # if the word is a common word or would be awkward to end a line with, keep trying
             while word in self.common_words or (max_length and len(word) > max_length):
                 word = rhyme(rhyme_with)
             # But if there's no rhyme result try another method altogether

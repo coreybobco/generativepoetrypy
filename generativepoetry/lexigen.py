@@ -212,7 +212,8 @@ def frequently_following_word(input_word, datamuse_api_max=10) -> Optional[str]:
     return result
 
 
-def phonetically_related_words(input_val: str_or_list_of_str, sample_size=None, datamuse_api_max=50) -> list:
+def phonetically_related_words(input_val: str_or_list_of_str, sample_size=None, datamuse_api_max=50,
+                               limit_results_per_input_word: Optional[int] = None) -> list:
     """Returns a list of rhymes and similar sounding words to a word or list of words.
 
     :param input_val: the word or words in relation to which this function is looking up phonetically related words
@@ -223,15 +224,16 @@ def phonetically_related_words(input_val: str_or_list_of_str, sample_size=None, 
                         meaning words.
     """
     input_words = validate_str_or_list_of_str(input_val)
-    pr_words: List[str] = []
+    results: List[str] = []
     for word in input_words:
-        pr_words.extend(rhymes(word, sample_size=sample_size))
-        exclude_words = pr_words.copy()
-        pr_words.extend(filter_word_list(similar_sounding_words(
-            word, sample_size=sample_size, datamuse_api_max=datamuse_api_max), exclude_words=exclude_words))
-        if sample_size and sample_size - 1 < len(pr_words):
-            pr_words = random.sample(pr_words, k=sample_size)
-    return pr_words
+        if limit_results_per_input_word:
+            results.extend(rhymes(word, sample_size=limit_results_per_input_word))
+        exclude_words = results.copy()
+        nonrhymes = filter_word_list(similar_sounding_words(
+            word, sample_size=sample_size, datamuse_api_max=datamuse_api_max), exclude_words=exclude_words)
+        results.extend(nonrhymes[:limit_results_per_input_word])
+    results = extract_sample(results, sample_size=sample_size)
+    return results
 
 
 def related_rare_words(input_val: str_or_list_of_str, sample_size: Optional[int] = 8,

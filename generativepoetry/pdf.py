@@ -75,7 +75,7 @@ class PDFGenerator:
 class ChaosPoemGenerator(PDFGenerator):
 
     def generate_pdf(self):
-        input_words = self.get_input_words()
+        input_words = get_input_words()
         output_words = input_words + phonetically_related_words(input_words)
         c = canvas.Canvas(f"{','.join(input_words)}.pdf")
         for word in output_words:
@@ -151,7 +151,7 @@ class MarkovPoemGenerator(PDFGenerator):
         else:
             raise Exception('Must choose from the following orientations: portrait, landscape')
         regular_font_sizes = [15, 18, 21, 24, 28]
-        input_words = self.get_input_words()
+        input_words = get_input_words()
         poemgen = PoemGenerator()
         poem = poemgen.poem_from_markov(input_words=input_words, min_line_words=min_line_words, num_lines=num_lines,
                                         max_line_words=max_line_words, max_line_length=max_line_length)
@@ -181,7 +181,7 @@ class FuturistPoemPDFGenerator():
 
     def generate(self):
         regular_font_sizes = [15, 18, 21, 24, 28]
-        input_words = self.get_input_words()
+        input_words = get_input_words()
         word_list = input_words + phonetically_related_words(input_words)
         poem_lines = []
         for i in range(25):

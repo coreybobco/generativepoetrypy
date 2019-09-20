@@ -42,7 +42,7 @@ class PoemGenerator:
         :param starting_word: the input word for the Markov algorithm, which hence is also the poem line's first word
         :param num_words: the number of words to write in the poem line
         :param rhyme_with: an optional word to try to make the poem line rhyme with. The algorithm will try something
-                           else  if this word is a common stopword or if it can't find a rhyme though.
+                           else if this word is a common stopword or if it can't find a rhyme though.
         :param words_for_sampling: a list of other words to throw in to the poem. If you don't know what to pass here,
                                    phonetically related words to the starting word probably adds some sonority.
         :param max_line_legnth: an upper limit in characters for the line -- important for PDF generation to keep
@@ -66,8 +66,7 @@ class PoemGenerator:
 
     def poem_from_markov(self, input_words, num_lines=10, min_line_words: int = 5, max_line_words: int = 9,
                          max_line_length: Optional[int] = 35) -> str:
-        words_for_sampling = input_words + phonetically_related_words(input_words)
-
+        words_for_sampling = input_words + phonetically_related_words(input_words, limit_results_per_input_word=20)
         # Check for undesirable similarity overlap in the words for sampling list
         similarity_checks = list(itertools.combinations(words_for_sampling, 2))
         words_removed = []
@@ -81,23 +80,27 @@ class PoemGenerator:
         last_line_last_word = ''
         random.shuffle(words_for_sampling)
         print(words_for_sampling)
-        lines, line_enders = []
+        line_enders = []
         for i in range(num_lines):
             rhyme_with = last_line_last_word if i % 2 == 1 else None
-            line_starter = words_for_sampling.pop()
-            while i > 1 and too_similar(line_starter, self.currently_generating_poem.lines[i - 1].split(' ')[0]):
+            # 67.5 % chance the line starts with an input word or something relate, 32.5% with a common word
+            line_starter = words_for_sampling.pop() if random.random() > .4 else \
+                    random.choice(MarkovWordGenerator.common_words)
+            while i >= 1 and too_similar(line_starter, self.currently_generating_poem.lines[i - 1].split(' ')[0]):
                 # while statement prevents repetition of line starters
-                line_starter = words_for_sampling.pop()
+                line_starter = words_for_sampling.pop() if random.random() > .4 else \
+                    random.choice(MarkovWordGenerator.common_words)
             line = self.poem_line_from_markov(line_starter, words_for_sampling=words_for_sampling,
                                               num_words=random.randint(min_line_words, max_line_words),
                                               rhyme_with=rhyme_with, max_line_length=max_line_length)
-            lines.append(line)
+            self.currently_generating_poem.lines.append(line)
             last_line_last_word = line.split(' ')[-1]
-            # Directly adding line ender to line now will screw up rhyme pairs so do that in another iteration
+            # Directly adding line ender to line now will screw up rhyme pairs so save it & add it in another iteration
             line_enders.append(random.choice(self.markov_line_enders))
             print(line + line_enders[-1])
         for i, line in enumerate(self.currently_generating_poem.lines):
-            self.currently_generating_poem.lines[i] = line + line_enders[i]
+            self.currently_generating_poem.lines[i] += line_enders[i]
+        poem = self.currently_generating_poem
         self.currently_generating_poem = None
         return poem
 
