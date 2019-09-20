@@ -99,7 +99,7 @@ class CharacterSoupPDFGenrator(PDFGenerator):
         c.save()
 
 
-class StopwordSoupPDFGenrator(PDFGenerator):
+class StopwordSoupPDFGenerator(PDFGenerator):
     standard_font_sizes = [6, 16, 24, 32, 48]
 
     def generate_pdf(self):

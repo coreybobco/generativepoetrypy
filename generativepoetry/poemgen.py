@@ -11,6 +11,7 @@ class Poem:
     def __init__(self, input_words, words_for_sampling):
         self.input_words = input_words
         self.words_for_sampling = words_for_sampling
+        self.title = "'".join(input_words)
 
     def __str__(self):
         return self.raw_text
@@ -34,7 +35,6 @@ class PoemGenerator:
     common_words = ["the", "with", "in", "that", "not", "a", "an", "of", "for", "as", "like", "on"]
     last_algorithms_used_to_reach_next_word = (None, None)
     currently_generating_poem = None
-    last_poem = None
 
     def random_nonrhyme(self, previous_words: List[str], rhymable: bool=False) -> str:
         """Return a random result of a random function that hits Project Datamuse API (rhyme function excluded)
@@ -199,9 +199,8 @@ class PoemGenerator:
             print(line + line_enders[-1])
         for i, line in enumerate(self.currently_generating_poem.lines):
             self.currently_generating_poem.lines[i] = line + line_enders[i]
-        self.last_poem = self.currently_generating_poem
         self.currently_generating_poem = None
-        return self.last_poem
+        return poem
 
     def poem_line_from_word_list(self, word_list: List[str], max_line_length=35, connectors: List[str] = []) -> str:
         """Generate a line of a visual poem from a list of words by gluing them together with random connectors
