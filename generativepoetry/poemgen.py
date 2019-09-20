@@ -165,7 +165,7 @@ class PoemGenerator:
                 output_words.append(word)
         return " ".join(output_words)
 
-    def poem_from_markov(self, input_words, num_lines=10, min_line_words: int=5, max_line_words: int=9,
+    def poem_from_markov(self, input_words, num_lines=10, min_line_words: int = 5, max_line_words: int = 9,
                          max_line_length: Optional[int] = 35) -> str:
         words_for_sampling = input_words + phonetically_related_words(input_words)
 
@@ -173,7 +173,7 @@ class PoemGenerator:
         similarity_checks = list(itertools.combinations(words_for_sampling, 2))
         words_removed = []
         for word_pair in similarity_checks:
-            if (not(word_pair[0] in words_removed) or not(word_pair[1] in words_removed)) and \
+            if not(word_pair[0] in words_removed or word_pair[1] in words_removed) and \
                     too_similar(word_pair[0], word_pair[1]):
                 words_removed.append(random.choice([word_pair[0], word_pair[1]]))
                 words_for_sampling.remove(words_removed[-1])
@@ -182,6 +182,7 @@ class PoemGenerator:
         last_line_last_word = ''
         random.shuffle(words_for_sampling)
         print(words_for_sampling)
+        lines, line_enders = []
         for i in range(num_lines):
             rhyme_with = last_line_last_word if i % 2 == 1 else None
             line_starter = words_for_sampling.pop()
@@ -191,12 +192,13 @@ class PoemGenerator:
             line = self.poem_line_from_markov(line_starter, words_for_sampling=words_for_sampling,
                                               num_words=random.randint(min_line_words, max_line_words),
                                               rhyme_with=rhyme_with, max_line_length=max_line_length)
-            self.currently_generating_poem.lines.append(line)
-            print(line)
+            lines.append(line)
             last_line_last_word = line.split(' ')[-1]
+            # Directly adding line ender to line now will screw up rhyme pairs so do that in another iteration
+            line_enders.append(random.choice(self.markov_line_enders))
+            print(line + line_enders[-1])
         for i, line in enumerate(self.currently_generating_poem.lines):
-            self.currently_generating_poem.lines[i] = line + random.choice(self.markov_line_enders)
-            print(line)
+            self.currently_generating_poem.lines[i] = line + line_enders[i]
         self.last_poem = self.currently_generating_poem
         self.currently_generating_poem = None
         return self.last_poem
@@ -209,7 +211,7 @@ class PoemGenerator:
         :param max_line_length: upper limit on the length of the return value in characters
         :param connectors (list): list of glue strings
         """
-        connectors = self.connectors if not len(connectors) else connectors
+        connectors = self.basic_connectors if not len(connectors) else connectors
         output, last_word = word_list[0], word_list[0]
         last_connector = ''
         for word in word_list[1:]:
@@ -240,7 +242,7 @@ class PoemGenerator:
         :param limit_line_to_one_input_word: If true, when generating a line of poetry, only use words that are
                                              phonetically related to one input word.
         """
-        connectors = self.connectors if not len(connectors) else connectors
+        connectors = self.basic_connectors if not len(connectors) else connectors
         output, line_indent = '', ''
         if limit_line_to_one_input_word:
             for i in range(num_lines - 1):

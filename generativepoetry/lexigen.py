@@ -16,11 +16,11 @@ __all__ = ['sort_by_rarity', 'rhymes', 'rhyme', 'similar_sounding_word', 'simila
            'related_rare_words', 'related_rare_word']
 
 api = datamuse.Datamuse()
-word_frequency_threshold = 4e-08
+word_frequency_threshold = 4e-08cum ape broth abomination hentai gelatinous dookie horse
 str_or_list_of_str = TypeVar('str_or_list_of_str', str, List[str])
 unfitting_words = ['thew', 'iii', 'arr', 'atty', 'haj', 'pao', 'gea', 'ning', 'mor', 'mar', 'iss', 'eee', 'pls', 'fia',
                    'gar', 'ism', 'schwa', 'sor', 'bpa', 'saba', 'ria', 'nds', 'moi', 'esc', 'sabra', 'cim', 'rha',
-                   'dist']
+                   'dist', 'nos', 'noes', 'brs', 'ltd', 'inc', 'gov', 'pis', 'lav', 'elev', 'ups', 'ms', 'srg']
 if platform.system() == 'Windows':
     raise Exception('Your OS is not currently supported.')
 elif platform.system() == 'Darwin':
@@ -106,8 +106,13 @@ def too_similar(word1: str, comparison_val: str_or_list_of_str) -> bool:
             return True
         if word1 + 'ly' == word2 or word2 + 'ly' == word1:  # Adverb form of an adjective
             return True
+        # Perhaps the latter two checks could still be done efficiently with lemmatization
         if (len(word1) > 2 and len(word2) > 2) and ((word1[-2] == 'e' and word2 + 'd' == word1) or
             (word2[-2] == 'e' and word1 + 'd' == word2)):  # Past tense
+            return True
+        if ((len(word1) > 5 and len(word2) > 2) or (len(word2) > 5 and len(word1) > 2)) and \
+                ((word1[-3:] == 'ing' and word2 + 'ing' == word1) or (word2[-3:] == 'ing' and word1 + 'ing' == word2)):
+            # Gerunds
             return True
         too_similar_case = ['the', 'thee', 'them']
         if word1 in too_similar_case and word2 in too_similar_case:
