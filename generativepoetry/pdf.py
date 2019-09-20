@@ -18,6 +18,7 @@ class PDFGenerator:
                     'Helvetica', 'Helvetica-BoldOblique', 'Helvetica-Bold', 'Helvetica-Oblique',
                     'Times-Bold', 'Times-BoldItalic', 'Times-Italic', 'Times-Roman',
                     'Vera', 'VeraBd', 'VeraBI', 'VeraIt']
+    orientation = 'landscape'
 
     def __init__(self):
         registerFont(TTFont('arial', 'arial.ttf'))
@@ -40,14 +41,15 @@ class PDFGenerator:
     def get_max_x_coordinate(self, line, font_choice, font_size):
         if (font_size >= 23 and len(line) >= 17) or (font_size >= 20 and len(line) > 30) or \
                 font_choice.startswith('Courier'):  # Courier is the widest
-            return 30
+            return 30 if self.orientation == 'portrait' else 60
         elif (font_size == 23 and len(line) > 14) or (font_size >= 20 and len(line) > 16) or len(line) > 20:
-            return 100
+            return 100 if self.orientation == 'portrait' else 130
         else:
-            return 250
+            return 250 if self.orientation == 'portrait' else 280
 
     def get_input_words(self):
-        print("Type some words separated by commas to generate a poem.")
+        print("Type some words separated by commas or spaces to generate a poem.")
+        return input().split(' ')
         return input().split(',')
 
     def get_random_color(self, threshold=.85):
@@ -103,7 +105,7 @@ class StopwordSoupPDFGenrator(PDFGenerator):
     def generate_pdf(self):
         c = canvas.Canvas("stopword_soup.pdf")
         punctuation = [char for char in string.punctuation]
-        words_to_use = filter_word_list(stopwords.words('english')) + punctuation  # filter remove halve of contractions
+        words_to_use = filter_word_list(stopwords.words('english')) + punctuation  # filter removes 1/2s of contractions
         for word in ['him', 'her', 'his', 'they', 'won']:
             words_to_use.remove(word)
         words_to_use.extend(['hmm', 'ah', 'umm', 'uh', 'ehh.', 'psst..', 'what?', 'oh?'])
@@ -126,18 +128,21 @@ class StopwordSoupPDFGenrator(PDFGenerator):
 class MarkovPoemGenerator(PDFGenerator):
 
     def generate_pdf(self, orientation='landscape'):
-        if orientation.lower() == 'landscape':
-            num_lines = 12
-            y_coordinate = 580
+        self.orientation = orientation
+        if self.orientation.lower() == 'landscape':
+            num_lines = 14
+            y_coordinate = 550
             min_line_words = 6
             max_line_words = 10
-            max_line_length = 60
-        elif orientation.lower() == 'portrait':
+            max_line_length = 66
+            min_x_coordinate = 60
+        elif self.orientation.lower() == 'portrait':
             num_lines = 24
-            y_coordinate = 780
+            y_coordinate = 740
             min_line_words = 4
             max_line_words = 7
             max_line_length = 40
+            min_x_coordinate = 15
         else:
             raise Exception('Must choose from the following orientations: portrait, landscape')
         regular_font_sizes = [15, 18, 21, 24, 28]
@@ -159,7 +164,8 @@ class MarkovPoemGenerator(PDFGenerator):
             max_x_coordinate = self.get_max_x_coordinate(line, font_choice, font_size)
             c.setFont(font_choice, font_size)
             last_font_choice = font_choice
-            c.drawString(random.randint(15, max_x_coordinate), y_coordinate, line)
+            x_coordinate = random.randint(min_x_coordinate, max_x_coordinate)
+            c.drawString(x_coordinate, y_coordinate, line)
             y_coordinate -= 32
         c.showPage()
         c.save()
@@ -187,6 +193,7 @@ class FuturistPoemPDFGenerator():
             y_coordinate += 31
         c.showPage()
         c.save()
+
 
 class VPoemFromListGenerator(PDFGenerator):
 
