@@ -1,13 +1,42 @@
 import itertools
 import re
 import unittest
+from unittest.mock import patch
 from generativepoetry.lexigen import *
-from generativepoetry.lexigen import validate_str, validate_str_list, has_invalid_characters, validate_word, \
-                                     too_similar,  filter_word, filter_word_list, extract_sample, sort_by_rarity
 from generativepoetry.poemgen import *
+from generativepoetry.utils import *
 
 
-class TestValidationAndFilters(unittest.TestCase):
+class TestUtils(unittest.TestCase):
+
+    def test_setup_spellchecker(self):
+        self.assertIsNotNone(setup_spellchecker())
+
+    def test_get_random_color(self):
+        for i in range(4):
+            rgb = get_random_color()
+            red_over = rgb[0] >= .85
+            green_over = rgb[1] >= .85
+            blue_over = rgb[2] >= .85
+            self.assertFalse(red_over and green_over) or (red_over and blue_over) or (green_over and blue_over)
+        for i in range(4):
+            threshold = .25
+            rgb = get_random_color()
+            red_over = rgb[0] >= threshold
+            green_over = rgb[1] >= threshold
+            blue_over = rgb[2] >= threshold
+            self.assertFalse(red_over and green_over) or (red_over and blue_over) or (green_over and blue_over)
+
+    def test_get_input_words(self):
+        test_input = 'trout mask replica'
+        with patch('builtins.input', return_value=test_input):
+            self.assertEqual(get_input_words(), ['trout', 'mask', 'replica'])
+        test_input = 'fish,paperclip,atom,benign'
+        with patch('builtins.input', return_value=test_input):
+            self.assertEqual(get_input_words(), ['fish', 'paperclip', 'atom', 'benign'])
+        test_input = 'fish, paperclip, atom, benign'
+        with patch('builtins.input', return_value=test_input):
+            self.assertEqual(get_input_words(), ['fish', 'paperclip', 'atom', 'benign'])
 
     def test_validate_str(self):
         self.assertRaises(ValueError, lambda: validate_str(2))
@@ -78,8 +107,13 @@ class TestValidationAndFilters(unittest.TestCase):
         exclude_words = ['diamond', 'dinosaur']
         self.assertEqual(filter_word_list(word_list, exclude_words=exclude_words), ['arraignment'])
 
+    def test_sort_by_rarity(self):
+        unsorted_words = ['cat', 'catabasis', 'hue', 'corncob',  'the', 'Catalan', 'errant']
+        correctly_sorted_words = ['catabasis', 'corncob', 'errant', 'hue', 'Catalan', 'cat', 'the']
+        self.assertEqual(sort_by_rarity(unsorted_words), correctly_sorted_words)
 
-class TestWordSampling(unittest.TestCase):
+
+class TestLexigen(unittest.TestCase):
     def test_rhymes(self):
         self.assertEqual(rhymes('metamorphosis'), [])
         rhymes_with_clouds = ['crowds', 'shrouds']
@@ -249,11 +283,6 @@ class TestWordSampling(unittest.TestCase):
         expected_pr_words = sorted(pr_to_poet + ['eon', 'gnawing', 'knowing', 'kneeing', 'naan', 'non', 'noun'])
         self.assertEqual(sorted(phonetically_related_words(['poet', 'neon'], sample_size=None)), expected_pr_words)
 
-    def test_sort_by_rarity(self):
-        unsorted_words = ['cat', 'catabasis', 'hue', 'corncob',  'the', 'Catalan', 'errant']
-        correctly_sorted_words = ['catabasis', 'corncob', 'errant', 'hue', 'Catalan', 'cat', 'the']
-        self.assertEqual(sort_by_rarity(unsorted_words), correctly_sorted_words)
-
     def test_related_rare_words(self):
         self.assertRaises(ValueError, lambda: related_rare_words(2))
         self.assertRaises(ValueError, lambda: related_rare_words(2.5))
@@ -286,6 +315,43 @@ class TestWordSampling(unittest.TestCase):
                                 'sophomoric', 'uneconomical', 'uproarious']
         self.assertIn(related_rare_word('comical'), result_possibilities)
 
+
+class TestMarkovWordGenerator(unittest.TestCase):
+
+    def test_random_nonrhyme(self):
+        with open('tests/random_nonrhyme_possible_results.txt') as f:
+            # There are over 5000 possible results even with rare words as input since this function sometimes calls
+            # a random lexigen function on the result of a random lexigen function (and there are already ~70 possible
+            # results even if only one function is called.
+            possible_results = f.read().splitlines()
+        markovgen = MarkovWordGenerator()
+        for i in range(6):
+            result = markovgen.random_nonrhyme(['pataphysics', 'Dadaist'])
+            self.assertIn(result, possible_results)
+
+    def test_nonlast_word(self):
+        with open('tests/random_nonrhyme_possible_results.txt') as f:
+            possible_randalg_results = f.read().splitlines()
+        words_for_sampling = ['fervent', 'mutants', 'dazzling', 'flying', 'saucer', 'milquetoast']
+        markovgen = MarkovWordGenerator()
+        input_words = ['pataphysics', 'Dadaist']
+        for i in range(2):
+            result = markovgen.nonlast_word_of_markov_line(input_words[i:], words_for_sampling)
+            self.assertTrue(result in possible_randalg_results or result in words_for_sampling)
+            self.assertIn(markovgen.nonlast_word_of_markov_line(input_words[i:]), possible_randalg_results)
+
+    def test_last_word(self):
+        with open('tests/random_nonrhyme_possible_results.txt') as f:
+            possible_randalg_results = f.read().splitlines()
+        markovgen = MarkovWordGenerator()
+        input_words = ['pataphysics', 'Dadaist']
+        for i in range(2):
+            result = markovgen.last_word_of_markov_line(input_words[i:], max_length=6)
+            self.assertIn(result, possible_randalg_results)
+            self.assertLessEqual(len(result), 6)
+            rhyming_result = markovgen.last_word_of_markov_line(input_words[i:], rhyme_with='shudder', max_length=10)
+            self.assertLessEqual(len(rhyming_result), 10)
+            self.assertIn(rhyming_result, rhymes('shudder', sample_size=None))
 
 class TestPoemGenerator(unittest.TestCase):
 
@@ -344,7 +410,43 @@ class TestPoemGenerator(unittest.TestCase):
             self.assertEqual(last_line_words[1], 'time')
 
     def test_poem_from_markov(self):
-        pass
+        def test_random_nonrhyme(self):
+            with open('tests/random_nonrhyme_possible_results.txt') as f:
+                # There are over 5000 possible results even with rare words as input since this function sometimes calls
+                # a random lexigen function on the result of a random lexigen function (and there are already ~70 possible
+                # results even if only one function is called.
+                possible_results = f.read().splitlines()
+            pgen = PoemGenerator()
+            pgen.currently_generating_poem = Poem(['pataphysics', 'Dadaist'], [])
+            for i in range(6):
+                result = pgen.random_nonrhyme(['pataphysics', 'Dadaist'])
+                self.assertIn(result, possible_results)
+
+        def test_nonlast_word(self):
+            with open('tests/random_nonrhyme_possible_results.txt') as f:
+                possible_randalg_results = f.read().splitlines()
+            words_for_sampling = ['fervent', 'mutants', 'dazzling', 'flying', 'saucer', 'milquetoast']
+            pgen = PoemGenerator()
+            input_words = ['pataphysics', 'Dadaist']
+            pgen.currently_generating_poem = Poem(input_words, [])
+            for i in range(2):
+                result = pgen.nonlast_word_of_markov_line(input_words[i:], words_for_sampling)
+                self.assertTrue(result in possible_randalg_results or result in words_for_sampling)
+                self.assertIn(pgen.nonlast_word_of_markov_line(input_words[i:]), possible_randalg_results)
+
+        def test_last_word(self):
+            with open('tests/random_nonrhyme_possible_results.txt') as f:
+                possible_randalg_results = f.read().splitlines()
+            pgen = PoemGenerator()
+            input_words = ['pataphysics', 'Dadaist']
+            pgen.currently_generating_poem = Poem(['star', 'chime'], [])
+            for i in range(2):
+                result = pgen.last_word_of_markov_line(input_words[i:], max_length=6)
+                self.assertIn(result, possible_randalg_results)
+                self.assertLessEqual(len(result), 6)
+                rhyming_result = pgen.last_word_of_markov_line(input_words[i:], rhyme_with='shudder', max_length=10)
+                self.assertLessEqual(len(rhyming_result), 10)
+                self.assertIn(rhyming_result, rhymes('shudder', sample_size=None))
 
     def test_poem_line_from_markov(self):
         pgen = PoemGenerator()
@@ -355,7 +457,8 @@ class TestPoemGenerator(unittest.TestCase):
         words = line.split(' ')
         self.assertLessEqual(len(line), 40)
         self.assertLessEqual(len(words), 8)
-        self.assertNotIn(words[-1], pgen.common_words)
+        markovgen = MarkovWordGenerator()
+        self.assertNotIn(words[-1], markovgen.common_words)
         similarity_checks = list(itertools.combinations(words, 2))
         for word_pair in similarity_checks:
             self.assertFalse(too_similar(word_pair[0], word_pair[1]))
@@ -364,7 +467,7 @@ class TestPoemGenerator(unittest.TestCase):
         words = line.split(' ')
         self.assertEqual(len(words), 8)
         self.assertIn(words[-1], rhymes('bell', sample_size=None))
-        self.assertNotIn(line.split(' ')[-1], pgen.common_words)
+        self.assertNotIn(line.split(' ')[-1], markovgen.common_words)
         similarity_checks = list(itertools.combinations(words, 2))
         for word_pair in similarity_checks:
             self.assertFalse(too_similar(word_pair[0], word_pair[1]))
@@ -372,48 +475,10 @@ class TestPoemGenerator(unittest.TestCase):
                                           words_for_sampling=words_for_sampling, max_line_length=None)
         words = line.split(' ')
         self.assertEqual(len(words), 8)
-        self.assertNotIn(words[-1], pgen.common_words)
+        self.assertNotIn(words[-1], markovgen.common_words)
         similarity_checks = list(itertools.combinations(words, 2))
         for word_pair in similarity_checks:
             self.assertFalse(too_similar(word_pair[0], word_pair[1]))
-
-    def test_random_nonrhyme(self):
-        with open('tests/random_nonrhyme_possible_results.txt') as f:
-            # There are over 5000 possible results even with rare words as input since this function sometimes calls
-            # a random lexigen function on the result of a random lexigen function (and there are already ~70 possible
-            # results even if only one function is called.
-            possible_results = f.read().splitlines()
-        pgen = PoemGenerator()
-        pgen.currently_generating_poem = Poem(['pataphysics', 'Dadaist'], [])
-        for i in range(6):
-            result = pgen.random_nonrhyme(['pataphysics', 'Dadaist'])
-            self.assertIn(result, possible_results)
-
-    def test_nonlast_word(self):
-        with open('tests/random_nonrhyme_possible_results.txt') as f:
-            possible_randalg_results = f.read().splitlines()
-        words_for_sampling = ['fervent', 'mutants', 'dazzling', 'flying', 'saucer', 'milquetoast']
-        pgen = PoemGenerator()
-        input_words = ['pataphysics', 'Dadaist']
-        pgen.currently_generating_poem = Poem(input_words, [])
-        for i in range(2):
-            result = pgen.nonlast_word_of_markov_line(input_words[i:], words_for_sampling)
-            self.assertTrue(result in possible_randalg_results or result in words_for_sampling)
-            self.assertIn(pgen.nonlast_word_of_markov_line(input_words[i:]), possible_randalg_results)
-
-    def test_last_word(self):
-        with open('tests/random_nonrhyme_possible_results.txt') as f:
-            possible_randalg_results = f.read().splitlines()
-        pgen = PoemGenerator()
-        input_words = ['pataphysics', 'Dadaist']
-        pgen.currently_generating_poem = Poem(['star', 'chime'], [])
-        for i in range(2):
-            result = pgen.last_word_of_markov_line(input_words[i:], max_length=6)
-            self.assertIn(result, possible_randalg_results)
-            self.assertLessEqual(len(result), 6)
-            rhyming_result = pgen.last_word_of_markov_line(input_words[i:], rhyme_with='shudder', max_length=10)
-            self.assertLessEqual(len(rhyming_result), 10)
-            self.assertIn(rhyming_result, rhymes('shudder', sample_size=None))
 
     def test_print_poem(self):
         pass

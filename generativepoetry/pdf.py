@@ -1,14 +1,31 @@
 import random
 import string
 from os.path import isfile
-from prosedecomposer import *
 from reportlab.pdfgen import canvas
-from generativepoetry.lexigen import filter_word_list
 from generativepoetry.poemgen import *
 from reportlab.pdfbase.pdfmetrics import registerFont, registerFontFamily
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.pagesizes import letter, landscape
 from nltk.corpus import stopwords
+from prosedecomposer import *
+from .utils import filter_word_list
+
+
+class VisualPoemString():
+    text = ''
+    x = Nonetext = ''
+    x = None
+    y = None
+    font = None
+    font_size = None
+    rgb = None
+    y = None
+    font = None
+    font_size = None
+    rgb = None
+
+    def __init__(self):
+        pass
 
 
 class PDFGenerator:
@@ -47,18 +64,6 @@ class PDFGenerator:
         else:
             return 250 if self.orientation == 'portrait' else 280
 
-    def get_input_words(self):
-        print("Type some words separated by commas or spaces to generate a poem.")
-        return input().split(' ')
-        return input().split(',')
-
-    def get_random_color(self, threshold=.85):
-        r,g,b = 1,1,1
-        while (1 - r <= threshold and 1 - g <= threshold) or (1 - g <= threshold and 1 - b <= threshold) or \
-                (1 - r <= threshold and 1 - b <= threshold):
-            r,g,b = random.random(), random.random(), random.random()
-        return r,g,b
-
     def get_filename(self, input_words, file_extension='pdf'):
         sequence = ""
         filename = f"{','.join(input_words)}{sequence}.{file_extension}"
@@ -81,7 +86,7 @@ class ChaosPoemGenerator(PDFGenerator):
         c.save()
 
 
-class CharacterSoupPDFGenrator(PDFGenerator):
+class CharacterSoupPDFGenerator(PDFGenerator):
     standard_font_sizes = [6, 16, 32, 56, 64, 96]
 
     def generate_pdf(self):
