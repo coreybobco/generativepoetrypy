@@ -35,7 +35,27 @@ In this sense, these poems are similar to abstract paintings in which paint is t
 
 By way of example, here are five concrete poems from the same recipe I collaged together using the same *recipe*: the words *paranoid*, *marinate*, *hysteria*, *radio*, *waves*, and *reverie*.
 
-    .. image:: https://raw.githubusercontent.com/coreybobco/generativepoetry-py/master/example.png
+    .. image:: https://raw.githubusercontent.com/coreybobco/generativepoetry-py/master/example_images/collage.png
+
+And here is an example of a generated Futurist visual poem (Futurism as in 1909 & F.T. Marinetti, not transhumanism -- see below).
+
+    .. image:: https://raw.githubusercontent.com/coreybobco/generativepoetry-py/master/example_images/futurist_pdf.png
+
+And here is a poem produced using Markov chain text generation using the various word sampling methods in this package's "lexigen" submodule.
+
+    .. image:: https://raw.githubusercontent.com/coreybobco/generativepoetry-py/master/example_images/markov_pdf.png
+
+This one's more abstract, or perhaps more concrete, and by that I mean concrete poetry, which deals more with spatial arrangement and usually lacked syntax:
+
+    .. image:: https://raw.githubusercontent.com/coreybobco/generativepoetry-py/master/example_images/chaotic_concrete_pdf.png
+
+But not as chaotic as this method of making "character soup":
+
+.. image:: https://raw.githubusercontent.com/coreybobco/generativepoetry-py/master/example_images/character_soup_pdf.png
+
+And this last one does the same thing but using stop words from NLTK along with "verbal stop words" like "um" and "ahem."
+
+.. image:: https://raw.githubusercontent.com/coreybobco/generativepoetry-py/master/example_images/stopword_soup_pdf.png
 
 Installation
 ^^^^^^^^^^^^
@@ -83,17 +103,80 @@ Then install using pip with:
 Things to try:
 ^^^^^^^^^^^^^^
 
+Visual Poems Generated to PDF
+"""""""""""""""""""""""""""""
+
+Import the relevant submodule first.
+
 .. code-block::
 
-   # Import the module's functions first.
-   from generativepoetry import *
+   from generativepoetry.lexigen import *
 
-Writing a Poem
+Markov Chain Based Poem PDF
+"""""""""""""""""""""""""""
+
+This method of poem generation asks the user for words as input, gets phonetically related words to those, and then uses both as ways to start lines, then using a probabilistic custom Markov chain based on previous words in a given line to derive the rest of the line.
+
+.. code-block::
+
+   mppgen = MarkovPoemPDFGenerator()
+   mpgen.generate_pdf()  # This will ask for input words as input. 5 to 8 words is ideal.
+   # Expected filename: word1,word2,word3,word4,word5,word6.pdf or the same with (1).pdf instead, etc.
+
+Futurist Poem Generator
+"""""""""""""""""""""""
+
+In F.T. Marinetti's 1912 `Technical Manifesto of Futurist Literature <http://greeninteger.com/pdfs/marinetti-technical-manifesto-of-futurist-literature.pdf>`_, he proposes replacing conjunctios in language and poetry with mathematical operators and eliminating most parts of speech. In many ways this manifesto anticipates the syntax of programming languages. This method of poem generation connects random phonetically related words together with mathematical operators.
+
+.. code-block::
+
+   fpgen = FuturistPoemPDFGenerator()
+   fpgen.generate_pdf()  # This will ask for input words as input. 5 to 8 words is ideal.
+   # Expected filename: word1,word2,word3,word4,word5,word6.pdf or the same with (1).pdf instead, etc.
+
+Chaos Poem PDF
 """"""""""""""
-Poem from word list requires a list of words--for non-programmers that means the list must have brackets, and each word must be surrounded by strings. I find using at least six words to be create more dynamic and interesting results using the same poem *recipe*.
+
+This method of poem generation asks the user for words as input, gets phonetically related words to those to, and then draws those words at random X,Y coordinates on the page.
 
 .. code-block::
 
+   ccppgen = ChaoticConcretePoemPDFGenerator()
+   ccppgen.generate_pdf()  # This will ask for input words as input. 5 to 8 words is ideal.
+   # Expected filename: word1,word2,word3,word4,word5,word6.pdf or the same with (1).pdf instead, etc.
+
+Character Soup Poem
+"""""""""""""""""""
+
+This method of poem generation draws characters (letters, numbers, special characters) at random X,Y coordinates on the page.
+
+.. code-block::
+
+   csppgen = CharacterSoupPoemPDFGenerator()
+   csppgen.generate_pdf()  # No input required
+   # Expected filename: character_soup.pdf
+
+Stop Word Soup Poem
+""""""""""""""""""
+
+This method of poem generation draws stop words from NLTK's list (ex: the, and, of) as well as "verbal" stopwords (hmm, ah, umm, etc.) at random XY coordiantes on the page.
+
+.. code-block::
+
+   ssppgen = StopWordSoupPoemPDFGenerator()
+   spppgen.generate_pdf()  # No input required
+   # Expected filename: stopword_soup.pdf
+
+
+Sonorous Visual Poem (Non-PDF)
+""""""""""""""""""""""""""""""
+This kind of poem requires a list of words as input--for non-programmers that means the list must have brackets, and each word must be surrounded by strings. I find using at least six words to be create more dynamic and interesting results using the same poem *recipe*.
+
+.. code-block::
+
+   # Import the module's functions first and instantiate a poem generator.
+   from generativepoetry.poemgen import *
+   pgen = PoemGenerator()
    # Print_poem just prints newlines before and after the poem so you can also use Python's print function.
    print_poem(poem_from_word_list(['crypt', 'lost', 'ghost', 'time', 'raven', 'ether']))
    # You can also control the number of lines and their width with the lines and max_line_length_arguments.
@@ -102,6 +185,15 @@ Poem from word list requires a list of words--for non-programmers that means the
    print_poem(poem_from_word_list(['crypt', 'lost', 'ghost', 'time'], lines=9, max_line_length=25))
    # The following option makes it so each line uses only the phonetically related words of one input word
    print(poem_from_word_list(['crypt', 'lost', 'ghost', 'time'], link_line_to_input_word=True))
+
+Word Sampling
+"""""""""""""
+
+Import the relevant submodule first.
+
+.. code-block::
+
+   from generativepoetry.lexigen import *
 
 Rhymes
 """"""
@@ -188,3 +280,19 @@ Finds a random sample of the rarest words that are related to a given input word
    # The same arguments can be optionally supplied to related_rare_word, which draws one word at random:
    related_rare_word('spherical', sample_size=8, rare_word_population_max=12)
    related_rare_word('spherical')
+
+Frequently following words
+""""""""""""""""""""""""""
+
+These are words that frequently follow a given word in Project Datamuse's corpora.
+
+.. code-block::
+
+   # To get all of the frequently following words according to Project Datamuse:
+   frequently_following_words('metamorphosis', sample_size=None, datamuse_api_max=None)
+   # To get the top 10 frequently following words and then randomly select 5 from that:
+   frequently_following_words('metamorphosis', sample_size=5, datamuse_api_max=10)
+   # When not provided, sample_size defaults to 6, and datamuse_api_max defaults to 20.
+   # The same arguments can be optionally supplied to frequently_following_word, which draws one word at random:
+   frequently_following_word('metamorphosis', sample_size=8, datamuse_api_max=12)
+   frequently_following_word('metamorphosis')

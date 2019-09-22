@@ -456,7 +456,7 @@ def test_poem_line_from_markov(self):
         self.assertFalse(too_similar(word_pair[0], word_pair[1]))
 
 
-class TestPDFGenerator(unittest.TestCase):
+class TestPDFGeneration(unittest.TestCase):
 
     def test_get_font_sizes(self):
         pdfgen = PDFGenerator()
@@ -466,9 +466,6 @@ class TestPDFGenerator(unittest.TestCase):
         self.assertIn(font_size, [16, 18, 20])
         font_size = pdfgen.get_font_size('this line is short')
         self.assertIn(font_size, pdfgen.default_font_sizes)
-        custom_font_sizes = [15, 18, 21, 24, 28]
-        font_size = pdfgen.get_font_size('this line is short', custom_font_sizes)
-        self.assertIn(font_size, custom_font_sizes)
 
     def test_get_max_x_coordinate(self):
         pdfgen = PDFGenerator()
