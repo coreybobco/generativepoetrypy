@@ -27,7 +27,7 @@ class VisualPoemString():
 
 
 class PDFGenerator:
-    standard_font_sizes = [12, 14, 16, 18, 24, 32]
+    default_font_sizes = [12, 14, 16, 18, 24, 32]
     font_choices = ['arial', 'arial-bold', 'arial-italic', 'arial-bolditalic',
                     'Courier-Bold', 'Courier-Bold', 'Courier-BoldOblique','Courier-BoldOblique',
                     'Helvetica', 'Helvetica-BoldOblique', 'Helvetica-Bold', 'Helvetica-Oblique',
@@ -46,13 +46,15 @@ class PDFGenerator:
         registerFont(TTFont('VeraIt', 'VeraIt.ttf'))
         registerFont(TTFont('VeraBI', 'VeraBI.ttf'))
 
-    def get_font_size(self, line, font_sizes):
+    def get_font_size(self, line, font_sizes: Optional[List[int]] = None):
         if len(line) > 30:
             return 16
         elif len(line) >= 24:
             return random.choice([16, 18, 20])
         else:
-            return random.choice(font_sizes)
+            if font_sizes:
+                return random.choice(font_sizes)
+            return random.choice(self.default_font_sizes)
 
     def get_max_x_coordinate(self, line, font_choice, font_size):
         if (font_size >= 23 and len(line) >= 17) or (font_size >= 20 and len(line) > 30) or \
@@ -72,7 +74,7 @@ class PDFGenerator:
         return filename
 
 
-class ChaosPoemGenerator(PDFGenerator):
+class ChaosPoemPDFGenerator(PDFGenerator):
 
     def generate_pdf(self):
         input_words = get_input_words()
@@ -84,7 +86,7 @@ class ChaosPoemGenerator(PDFGenerator):
             word = random.choice([word, word, word, word.upper()])
             x = random.randint(15,450)
             y = random.randint(1,800)
-            font_choice = random.choice(self.font_choices)
+            font_choice = random.choice(self.font_choices)[16, 18, 20]
             font_size = random.choice(self.standard_font_sizes)
             rgb = get_random_color()
             vp_string = VisualPoemString(word, x=x, y=y, font=font_choice, font_size=font_size, rgb=rgb)
@@ -96,7 +98,7 @@ class ChaosPoemGenerator(PDFGenerator):
         c.save()
 
 
-class CharacterSoupPDFGenerator(PDFGenerator):
+class CharacterSoupPoemPDFGenerator(PDFGenerator):
     standard_font_sizes = [6, 16, 32, 56, 64, 96]
 
     def generate_pdf(self):
@@ -140,7 +142,7 @@ class StopwordSoupPDFGenerator(PDFGenerator):
         c.save()
 
 
-class MarkovPoemGenerator(PDFGenerator):
+class MarkovPoemPDFGenerator(PDFGenerator):
 
     def generate_pdf(self, orientation: string = 'landscape'):
         self.orientation = orientation
@@ -188,7 +190,7 @@ class MarkovPoemGenerator(PDFGenerator):
         c.save()
 
 
-class FuturistPoemPDFGenerator():
+class FuturistPoemPDFGenerator:
     connectors = [' + ', ' - ', ' * ', ' % ', ' = ', ' != ', ' :: ']
 
     def generate(self):
@@ -212,9 +214,9 @@ class FuturistPoemPDFGenerator():
         c.save()
 
 
-class VPoemFromListGenerator(PDFGenerator):
+class VisPoemFromLineListPDFGenerator(PDFGenerator):
 
-    def generate(poem_lines):
+    def generate_pdfc(poem_lines):
         regular_font_sizes = [15, 18, 21, 24, 28]
         word_list = input_words + phonetically_related_words(input_words)
         c = canvas.Canvas(f"{poem_lines[0]}.pdf")

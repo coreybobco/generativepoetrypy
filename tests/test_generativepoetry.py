@@ -3,6 +3,7 @@ import re
 import unittest
 from unittest.mock import patch
 from generativepoetry.lexigen import *
+from generativepoetry.pdf import *
 from generativepoetry.poemgen import *
 from generativepoetry.utils import *
 
@@ -455,5 +456,51 @@ def test_poem_line_from_markov(self):
         self.assertFalse(too_similar(word_pair[0], word_pair[1]))
 
 
-if __name__ == '__main__':
-    unittest.main()
+class TestPDFGenerator(unittest.TestCase):
+
+    def test_get_font_sizes(self):
+        pdfgen = PDFGenerator()
+        font_size = pdfgen.get_font_size('abra cadabra hocus pocus bananas eating locusts')  # 47 characters
+        self.assertEqual(font_size, 16)
+        font_size = pdfgen.get_font_size('this line is 26 characters')
+        self.assertIn(font_size, [16, 18, 20])
+        font_size = pdfgen.get_font_size('this line is short')
+        self.assertIn(font_size, pdfgen.default_font_sizes)
+        custom_font_sizes = [15, 18, 21, 24, 28]
+        font_size = pdfgen.get_font_size('this line is short', custom_font_sizes)
+        self.assertIn(font_size, custom_font_sizes)
+
+    def test_get_max_x_coordinate(self):
+        pdfgen = PDFGenerator()
+        x_coordinate = pdfgen.get_max_x_coordinate('this line is 26 characters', 'Arial', 24)
+        self.assertEqual(x_coordinate, 60)
+        x_coordinate = pdfgen.get_max_x_coordinate('this line is thirty-five characters', 'Arial', 21)
+        self.assertEqual(x_coordinate, 60)
+        x_coordinate = pdfgen.get_max_x_coordinate('this line short', 'Courier', 18)
+        self.assertEqual(x_coordinate, 60)
+        x_coordinate = pdfgen.get_max_x_coordinate('this line 18 chars', 'Arial', 20)
+        self.assertEqual(x_coordinate, 130)
+        x_coordinate = pdfgen.get_max_x_coordinate('this line is 21 chars', 'Arial', 15)
+        self.assertEqual(x_coordinate, 130)
+        x_coordinate = pdfgen.get_max_x_coordinate('short', 'Arial', 15)
+        self.assertEqual(x_coordinate, 280)
+        pdfgen.orientation = 'portrait'
+        x_coordinate = pdfgen.get_max_x_coordinate('this line 18 chars', 'Arial', 24)
+        self.assertEqual(x_coordinate, 30)
+        x_coordinate = pdfgen.get_max_x_coordinate('this line is thirty-five characters', 'Arial', 21)
+        self.assertEqual(x_coordinate, 30)
+        x_coordinate = pdfgen.get_max_x_coordinate('this line short', 'Courier', 18)
+        self.assertEqual(x_coordinate, 30)
+        x_coordinate = pdfgen.get_max_x_coordinate('this line 18 chars', 'Arial', 20)
+        self.assertEqual(x_coordinate, 100)
+        x_coordinate = pdfgen.get_max_x_coordinate('this line is 21 chars', 'Arial', 15)
+        self.assertEqual(x_coordinate, 100)
+        x_coordinate = pdfgen.get_max_x_coordinate('short', 'Arial', 15)
+        self.assertEqual(x_coordinate, 250)
+
+    def test_get_filename(self):
+        pdfgen = PDFGenerator()
+        input_words = ['chalice', 'crime', 'coins', 'spectacular', 'dazzle', 'enigma']
+        self.assertEqual(pdfgen.get_filename(input_words), 'chalice,crime,coins,spectacular,dazzle,enigma.pdf')
+        self.assertEqual(pdfgen.get_filename(input_words, file_extension='png'),
+                         'chalice,crime,coins,spectacular,dazzle,enigma.png')
