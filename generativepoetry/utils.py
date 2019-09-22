@@ -26,7 +26,7 @@ str_or_list_of_str = TypeVar('str_or_list_of_str', str, List[str])
 unfitting_words = ['thew', 'iii', 'arr', 'atty', 'haj', 'pao', 'gea', 'ning', 'mor', 'mar', 'iss', 'eee', 'pls', 'fia',
                    'gar', 'ism', 'schwa', 'sor', 'bpa', 'saba', 'ria', 'nds', 'moi', 'esc', 'sabra', 'cim', 'rha',
                    'dist', 'nos', 'noes', 'brs', 'ltd', 'inc', 'gov', 'pis', 'lav', 'elev', 'ups', 'ms', 'srg', 'cas',
-                   'dago', 'prob']
+                   'dago', 'prob', 'sro', 'ccs', 'pas', 'sab', 'cscs', 'arv', 'uhf', 'var', 'obe', 'tid']
 
 
 def get_input_words():

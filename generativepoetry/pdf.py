@@ -1,6 +1,7 @@
 import random
 import string
 from os.path import isfile
+from typing import List, TypeVar, Tuple
 from reportlab.pdfgen import canvas
 from generativepoetry.poemgen import *
 from reportlab.pdfbase.pdfmetrics import registerFont, registerFontFamily
@@ -10,22 +11,19 @@ from nltk.corpus import stopwords
 from prosedecomposer import *
 from .utils import filter_word_list
 
+rgb_tuple = Tuple[float]
+
 
 class VisualPoemString():
-    text = ''
-    x = Nonetext = ''
-    x = None
-    y = None
-    font = None
-    font_size = None
-    rgb = None
-    y = None
-    font = None
-    font_size = None
-    rgb = None
+    """The text drawn by reportlab at an XY coordinate--can be a line, a word, or just a character."""
 
-    def __init__(self):
-        pass
+    def __init__(self, text, x: int, y: int, font: str, font_size: int, rgb: Optional[Tuple] = None):
+        self.text = text
+        self.x = x
+        self.y = y
+        self.font = font
+        self.font_size = font_size
+        self.rgb = rgb
 
 
 class PDFGenerator:
@@ -36,6 +34,7 @@ class PDFGenerator:
                     'Times-Bold', 'Times-BoldItalic', 'Times-Italic', 'Times-Roman',
                     'Vera', 'VeraBd', 'VeraBI', 'VeraIt']
     orientation = 'landscape'
+    drawn_strings: List[VisualPoemString] = []
 
     def __init__(self):
         registerFont(TTFont('arial', 'arial.ttf'))
@@ -72,16 +71,27 @@ class PDFGenerator:
             filename = f"{','.join(input_words)}({sequence}).{file_extension}"
         return filename
 
+
 class ChaosPoemGenerator(PDFGenerator):
 
     def generate_pdf(self):
         input_words = get_input_words()
         output_words = input_words + phonetically_related_words(input_words)
-        c = canvas.Canvas(f"{','.join(input_words)}.pdf")
+        filename = self.get_filename(input_words)
+        c = canvas.Canvas(filename)
+        print(len(output_words))
         for word in output_words:
             word = random.choice([word, word, word, word.upper()])
-            c.setFont(random.choice(self.font_choices), random.choice(self.standard_font_sizes))
-            c.drawString(random.randint(15,450),random.randint(1,800), word)
+            x = random.randint(15,450)
+            y = random.randint(1,800)
+            font_choice = random.choice(self.font_choices)
+            font_size = random.choice(self.standard_font_sizes)
+            rgb = get_random_color()
+            vp_string = VisualPoemString(word, x=x, y=y, font=font_choice, font_size=font_size, rgb=rgb)
+            c.setFont(vp_string.font, vp_string.font_size)
+            c.setFillColorRGB(*vp_string.rgb)
+            c.drawString(vp_string.x, vp_string.y, vp_string.text)
+            self.drawn_strings.append(vp_string)
         c.showPage()
         c.save()
 
@@ -132,12 +142,12 @@ class StopwordSoupPDFGenerator(PDFGenerator):
 
 class MarkovPoemGenerator(PDFGenerator):
 
-    def generate_pdf(self, orientation='landscape'):
+    def generate_pdf(self, orientation: string = 'landscape'):
         self.orientation = orientation
         if self.orientation.lower() == 'landscape':
             num_lines = 14
             y_coordinate = 550
-            min_line_words = 6
+            min_line_words = 7
             max_line_words = 10
             max_line_length = 66
             min_x_coordinate = 60
@@ -162,16 +172,18 @@ class MarkovPoemGenerator(PDFGenerator):
         else:
             c = canvas.Canvas(filename)
         for line in poem.lines:
-            line = random.choice([line, line, line, line.upper()])
+            text = random.choice([line, line, line, line.upper()])
             font_size = self.get_font_size(line, regular_font_sizes)
             while font_choice is None or last_font_choice == font_choice:
                 font_choice = random.choice(self.font_choices)
             max_x_coordinate = self.get_max_x_coordinate(line, font_choice, font_size)
-            c.setFont(font_choice, font_size)
             last_font_choice = font_choice
             x_coordinate = random.randint(min_x_coordinate, max_x_coordinate)
-            c.drawString(x_coordinate, y_coordinate, line)
+            vp_string = VisualPoemString(line, x=x_coordinate, y=y_coordinate, font=font_choice, font_size=font_size)
+            c.setFont(vp_string.font, vp_string.font_size)
+            c.drawString(vp_string.x, vp_string.y, vp_string.text)
             y_coordinate -= 32
+            self.drawn_strings.append(vp_string)
         c.showPage()
         c.save()
 

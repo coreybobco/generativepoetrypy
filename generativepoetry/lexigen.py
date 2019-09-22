@@ -226,8 +226,7 @@ def phonetically_related_words(input_val: str_or_list_of_str, sample_size=None, 
     input_words = validate_str_or_list_of_str(input_val)
     results: List[str] = []
     for word in input_words:
-        if limit_results_per_input_word:
-            results.extend(rhymes(word, sample_size=limit_results_per_input_word))
+        results.extend(rhymes(word, sample_size=limit_results_per_input_word))
         exclude_words = results.copy()
         nonrhymes = filter_word_list(similar_sounding_words(
             word, sample_size=sample_size, datamuse_api_max=datamuse_api_max), exclude_words=exclude_words)

@@ -30,7 +30,7 @@ class PoemGenerator:
     line_enders = ['.', ', ', '!', '?', '', ' or', '...']
     markov_line_enders = ['', '', ',', ',', '!', '.', '?']
     line_indents = ['', '    ', '         ']
-    currently_generating_poem = None
+    poem = None
 
     def poem_line_from_markov(self, starting_word: str, num_words: int = 4, rhyme_with: Optional[str] = None,
                               words_for_sampling: List[str] = [], max_line_length: Optional[int] = 35) -> str:
@@ -45,11 +45,11 @@ class PoemGenerator:
                            else if this word is a common stopword or if it can't find a rhyme though.
         :param words_for_sampling: a list of other words to throw in to the poem. If you don't know what to pass here,
                                    phonetically related words to the starting word probably adds some sonority.
-        :param max_line_legnth: an upper limit in characters for the line -- important for PDF generation to keep
+        :param max_line_length: an upper limit in characters for the line -- important for PDF generation to keep
                                 everything on the page.
         """
         output_words, previous_word = [starting_word], starting_word
-        markovgen = MarkovWordGenerator(previous_lines=self.currently_generating_poem.lines)
+        markovgen = MarkovWordGenerator(previous_lines=self.poem.lines)
         for i in range(num_words - 1):
             if (i == num_words - 2) or (max_line_length and (max_line_length > 14 and
                                                              len(' '.join(output_words)) >= max_line_length - 14)):
@@ -66,6 +66,19 @@ class PoemGenerator:
 
     def poem_from_markov(self, input_words, num_lines=10, min_line_words: int = 5, max_line_words: int = 9,
                          max_line_length: Optional[int] = 35) -> str:
+        """Generate a line of poetry using a markov chain that optionally tries to make a line rhyme with the last one
+            Different algorithms handle the last word and all the other words: both algorithms use a mix of random
+            probability and process stopwords differently to keep the generated text interesting and non-repetitive.
+
+        :param input words: the user provided words to try making a poem from
+        :param num_lines: the number of lines the poem will have
+        :param max_line_words: the maximum number of words a line may have
+        :param words_for_sampling: a list of other words to throw in to the poem. If you don't know what to pass here,
+                                   phonetically related words to the starting word probably adds some sonority.
+        :param max_line_length: an upper limit in characters for the line -- important for PDF generation to keep
+                                everything on the page.
+            """
+        self.poem = None
         words_for_sampling = input_words + phonetically_related_words(input_words, limit_results_per_input_word=20)
         # Check for undesirable similarity overlap in the words for sampling list
         similarity_checks = list(itertools.combinations(words_for_sampling, 2))
@@ -76,32 +89,30 @@ class PoemGenerator:
                 words_removed.append(random.choice([word_pair[0], word_pair[1]]))
                 words_for_sampling.remove(words_removed[-1])
 
-        self.currently_generating_poem = Poem(input_words, words_for_sampling)
+        self.poem = Poem(input_words, words_for_sampling)
         last_line_last_word = ''
         random.shuffle(words_for_sampling)
-        print(words_for_sampling)
         line_enders = []
         for i in range(num_lines):
             rhyme_with = last_line_last_word if i % 2 == 1 else None
             # 67.5 % chance the line starts with an input word or something relate, 32.5% with a common word
             line_starter = words_for_sampling.pop() if random.random() > .4 else \
                     random.choice(MarkovWordGenerator.common_words)
-            while i >= 1 and too_similar(line_starter, self.currently_generating_poem.lines[i - 1].split(' ')[0]):
+            while i >= 1 and too_similar(line_starter, self.poem.lines[i - 1].split(' ')[0]):
                 # while statement prevents repetition of line starters
                 line_starter = words_for_sampling.pop() if random.random() > .4 else \
                     random.choice(MarkovWordGenerator.common_words)
             line = self.poem_line_from_markov(line_starter, words_for_sampling=words_for_sampling,
                                               num_words=random.randint(min_line_words, max_line_words),
                                               rhyme_with=rhyme_with, max_line_length=max_line_length)
-            self.currently_generating_poem.lines.append(line)
+            self.poem.lines.append(line)
             last_line_last_word = line.split(' ')[-1]
             # Directly adding line ender to line now will screw up rhyme pairs so save it & add it in another iteration
             line_enders.append(random.choice(self.markov_line_enders))
             print(line + line_enders[-1])
-        for i, line in enumerate(self.currently_generating_poem.lines):
-            self.currently_generating_poem.lines[i] += line_enders[i]
-        poem = self.currently_generating_poem
-        self.currently_generating_poem = None
+        for i, line in enumerate(self.poem.lines):
+            self.poem.lines[i] += line_enders[i]
+        poem = self.poem
         return poem
 
     def poem_line_from_word_list(self, word_list: List[str], max_line_length=35, connectors: List[str] = []) -> str:
