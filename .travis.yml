@@ -6,7 +6,7 @@ dist: bionic
 
 before_install:
   - sudo apt-get update
-  - sudo apt install -y libhunspell-dev hunspell-en-us ttf-mscorefonts-installer
+  - sudo DEBIAN_FRONTEND=noninteractive apt-get install -y libhunspell-dev hunspell-en-us ttf-mscorefonts-installer
   - sudo fc-cache
 
 install:
