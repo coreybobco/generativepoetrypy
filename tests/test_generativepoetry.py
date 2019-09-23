@@ -421,7 +421,7 @@ class TestPoemGenerator(unittest.TestCase):
             words = line.split(" ")
             self.assertGreaterEqual(len(words), 7)
             self.assertLessEqual(len(words), 10)
-            self.assertLessEqual(len(line), 66)
+            self.assertLessEqual(len(line), 71)
 
 
 def test_poem_line_from_markov(self):
