@@ -4,13 +4,14 @@ from .lexigen import *
 from .markov import MarkovWordGenerator
 from .utils import too_similar
 
+
 class Poem:
-    lines: List[str] = []
 
     def __init__(self, input_words, words_for_sampling):
         self.input_words = input_words
         self.words_for_sampling = words_for_sampling
         self.title = "'".join(input_words)
+        self.lines: List[str] = []
 
     def __str__(self):
         return self.raw_text
@@ -26,11 +27,14 @@ class Poem:
 
 
 class PoemGenerator:
-    basic_connectors = [' ', '   ', '...   ', random.choice([' & ', ' and ']), '  or  ', ' or ']
-    line_enders = ['.', ', ', '!', '?', '', ' or', '...']
-    markov_line_enders = ['', '', ',', ',', '!', '.', '?']
-    line_indents = ['', '    ', '         ']
-    poem = None
+
+    def __init__(self):
+        self.default_connectors = [' ', '   ', '...   ', random.choice([' & ', ' and ']), '  or  ', ' or ']
+        self.line_enders = ['.', ', ', '!', '?', '', ' or', '...']
+        self.markov_line_enders = ['', '', ',', ',', '!', '.', '?']
+        self.line_indents = ['', '    ', '         ']
+        self.poem = None
+
 
     def poem_line_from_markov(self, starting_word: str, num_words: int = 4, rhyme_with: Optional[str] = None,
                               words_for_sampling: List[str] = [], max_line_length: Optional[int] = 35) -> str:
@@ -123,7 +127,7 @@ class PoemGenerator:
         :param max_line_length: upper limit on the length of the return value in characters
         :param connectors (list): list of glue strings
         """
-        connectors = self.basic_connectors if not len(connectors) else connectors
+        connectors = connectors if len(connectors) else self.default_connectors
         output, last_word = word_list[0], word_list[0]
         last_connector = ''
         for word in word_list[1:]:
@@ -154,7 +158,7 @@ class PoemGenerator:
         :param limit_line_to_one_input_word: If true, when generating a line of poetry, only use words that are
                                              phonetically related to one input word.
         """
-        connectors = self.basic_connectors if not len(connectors) else connectors
+        connectors = self.default_connectors if not len(connectors) else connectors
         output, line_indent = '', ''
         if limit_line_to_one_input_word:
             for i in range(num_lines - 1):

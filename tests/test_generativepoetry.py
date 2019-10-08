@@ -502,3 +502,89 @@ class TestPDFGeneration(unittest.TestCase):
         self.assertEqual(pdfgen.get_filename(input_words), 'chalice,crime,coins,spectacular,dazzle,enigma.pdf')
         self.assertEqual(pdfgen.get_filename(input_words, file_extension='png'),
                          'chalice,crime,coins,spectacular,dazzle,enigma.png')
+        
+
+class TestChaoticConcretePoemPDFGenerator(unittest.TestCase):
+
+    def test_generate_pdf(self):
+        pdfgen = ChaoticConcretePoemPDFGenerator()
+        test_input = 'chalice crime coins spectacular'
+        with patch('builtins.input', return_value=test_input):
+            pdfgen.generate_pdf()
+        self.assertEqual(len(pdfgen.drawn_strings), 59)
+        for ds in pdfgen.drawn_strings:
+            self.assertGreaterEqual(ds.x, 15)
+            self.assertLessEqual(ds.x, 440)
+            self.assertGreaterEqual(ds.y, 15)
+            self.assertLessEqual(ds.y, 800)
+            self.assertIsNotNone(ds.font)
+            self.assertIn(ds.font_size, pdfgen.default_font_sizes)
+            self.assertTrue(type(ds.rgb), tuple)
+
+
+class TestCharacterSoupPoemPDFGenerator(unittest.TestCase):
+
+    def test_generate_pdf(self):
+        pdfgen = CharacterSoupPoemPDFGenerator()
+        pdfgen.generate_pdf()
+        self.assertGreaterEqual(len(pdfgen.drawn_strings), 300)  # Random, varies
+        for ds in pdfgen.drawn_strings:
+            self.assertGreaterEqual(ds.x, 10)
+            self.assertLessEqual(ds.x, 560)
+            self.assertGreaterEqual(ds.y, 10)
+            self.assertLessEqual(ds.y, 790)
+            self.assertIsNotNone(ds.font)
+            self.assertIn(ds.font_size, list(range(6, 73)))
+            self.assertTrue(type(ds.rgb), tuple)
+
+
+class TestStopwordSoupPoemPDFGenerator(unittest.TestCase):
+
+    def test_generate_pdf(self):
+        pdfgen = StopwordSoupPoemPDFGenerator()
+        pdfgen.generate_pdf()
+        self.assertGreaterEqual(len(pdfgen.drawn_strings), 157)
+        for ds in pdfgen.drawn_strings:
+            self.assertGreaterEqual(ds.x, 10)
+            self.assertLessEqual(ds.x, 490)
+            self.assertGreaterEqual(ds.y, 10)
+            self.assertLessEqual(ds.y, 790)
+            self.assertIsNotNone(ds.font)
+            self.assertIn(ds.font_size, list(range(6, 41)))
+            self.assertTrue(type(ds.rgb), tuple)
+
+
+class TestMarkovPoemPDFGenerator(unittest.TestCase):
+
+    def test_generate_pdf(self):
+        pdfgen = MarkovPoemPDFGenerator()
+        test_input = 'chalice crime coins spectacular'
+        with patch('builtins.input', return_value=test_input):
+            pdfgen.generate_pdf()
+        y_coord = 550
+        for ds in pdfgen.drawn_strings:
+            self.assertGreaterEqual(ds.x, 15)
+            self.assertLessEqual(ds.x, 250)
+            self.assertEqual(ds.y, y_coord)
+            self.assertIsNotNone(ds.font)
+            self.assertIsNotNone(ds.font_size)
+            self.assertTrue(type(ds.rgb), tuple)
+            y_coord -= 32
+
+
+class TestFuturistPoemPDFGenerator(unittest.TestCase):
+
+    def test_generate_pdf(self):
+        pdfgen = FuturistPoemPDFGenerator()
+        test_input = 'chalice crime coins spectacular'
+        with patch('builtins.input', return_value=test_input):
+            pdfgen.generate_pdf()
+        y_coord = 60
+        for ds in pdfgen.drawn_strings:
+            self.assertGreaterEqual(ds.x, 15)
+            self.assertLessEqual(ds.x, 280)
+            self.assertEqual(ds.y, y_coord)
+            self.assertIsNotNone(ds.font)
+            self.assertIsNotNone(ds.font_size)
+            self.assertTrue(type(ds.rgb), tuple)
+            y_coord += 31

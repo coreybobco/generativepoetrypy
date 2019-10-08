@@ -2,14 +2,14 @@ import random
 from .lexigen import *
 from .utils import *
 
+
 class MarkovWordGenerator:
     common_words = ["the", "with", "in", "that", "not", "a", "an", "of", "for", "as", "like", "on", 'his', 'the',
                     'your', 'my', 'their']
-    connector_choices = ['and', 'or', 'as', 'like', 'with']
-    last_algorithms_used_to_reach_next_word = (None, None)
-    previous_lines = []
 
     def __init__(self, previous_lines=[]):
+        self.connector_choices = ['and', 'or', 'as', 'like', 'with']
+        self.last_algorithms_used_to_reach_next_word = (None, None)
         self.previous_lines = previous_lines
 
     def random_nonrhyme(self, previous_words: List[str], rhymable: bool = False) -> str:

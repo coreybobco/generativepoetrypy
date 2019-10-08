@@ -32,8 +32,8 @@ class PDFGenerator:
                     'Helvetica', 'Helvetica-BoldOblique', 'Helvetica-Bold', 'Helvetica-Oblique',
                     'Times-Bold', 'Times-BoldItalic', 'Times-Italic', 'Times-Roman',
                     'Vera', 'VeraBd', 'VeraBI', 'VeraIt']
-    orientation = 'landscape'
-    drawn_strings: List[VisualPoemString] = []
+
+
 
     def __init__(self):
         registerFont(TTFont('arial', 'arial.ttf'))
@@ -44,6 +44,8 @@ class PDFGenerator:
         registerFont(TTFont('VeraBd', 'VeraBd.ttf'))
         registerFont(TTFont('VeraIt', 'VeraIt.ttf'))
         registerFont(TTFont('VeraBI', 'VeraBI.ttf'))
+        self.orientation = 'landscape'
+        self.drawn_strings: List[VisualPoemString] = []
 
     def get_font_size(self, line):
         if len(line) > 30:
@@ -101,7 +103,6 @@ class CharacterSoupPoemPDFGenerator(PDFGenerator):
     def generate_pdf(self):
         c = canvas.Canvas("character_soup.pdf")
         for i in range(20):
-
             char_sequence = random.choice([string.ascii_lowercase, string.digits, string.punctuation])
             for char in char_sequence:
                 char = random.choice([char, char, char.upper(), char.upper()]) \
@@ -115,11 +116,12 @@ class CharacterSoupPoemPDFGenerator(PDFGenerator):
                 c.setFillColorRGB(*rgb)
                 c.setFont(vp_string.font, vp_string.font_size)
                 c.drawString(vp_string.x, vp_string.y, vp_string.text)
+                self.drawn_strings.append(vp_string)
         c.showPage()
         c.save()
 
 
-class StopwordSoupPDFGenerator(PDFGenerator):
+class StopwordSoupPoemPDFGenerator(PDFGenerator):
     default_font_sizes = [6, 16, 24, 32, 48]
 
     def generate_pdf(self):
@@ -142,10 +144,7 @@ class StopwordSoupPDFGenerator(PDFGenerator):
             vp_string = VisualPoemString(word, x=x, y=y, font=font_choice, font_size=font_size, rgb=rgb)
             c.setFont(vp_string.font, vp_string.font_size)
             c.drawString(vp_string.x, vp_string.y, vp_string.text)
-            # complementary_punct = ''
-            # for char in word:
-            #     complementary_punct += random.choice(punctuation)
-            # c.drawString(random.randint(15, 550), random.randint(1, 780), complementary_punct)
+            self.drawn_strings.append(vp_string)
         c.showPage()
         c.save()
 
