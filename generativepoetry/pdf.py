@@ -33,8 +33,6 @@ class PDFGenerator:
                     'Times-Bold', 'Times-BoldItalic', 'Times-Italic', 'Times-Roman',
                     'Vera', 'VeraBd', 'VeraBI', 'VeraIt']
 
-
-
     def __init__(self):
         registerFont(TTFont('arial', 'arial.ttf'))
         registerFont(TTFont('arial-bold', 'arialbd.ttf'), )

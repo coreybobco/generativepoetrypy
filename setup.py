@@ -1,14 +1,20 @@
 from setuptools import setup, find_packages
 
+__author__ = 'Corey Bobco'
+__email__ = 'corey.bobco@gmail.com'
+__version__ = '0.2.0'
+
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
 requirements = [
     'hunspell>=0.5.5',
+    'nltk==3.4.5',
     'pronouncing>=0.2.0',
     'python-datamuse==1.2.1',
     'unittest2==1.1.0',
-    'wordfreq>=2.2.1'
+    'wordfreq>=2.2.1',
+    'console-menu==0.6.0',
 ]
 
 setup(

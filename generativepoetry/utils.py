@@ -4,7 +4,7 @@ import random
 import re
 from typing import List, TypeVar
 from wordfreq import word_frequency
-
+from consolemenu.screen import Screen
 
 def setup_spellchecker():
     if platform.system() == 'Windows':
@@ -30,9 +30,12 @@ unfitting_words = ['thew', 'iii', 'arr', 'atty', 'haj', 'pao', 'gea', 'ning', 'm
 
 
 def get_input_words():
-    print("Type some words separated by commas or spaces to generate a poem.")
-    inp = input()
-    return [word for word in re.split(r'[\s,]', inp) if word]
+    prompt = 'To generate a poem, type some words separated by commas or spaces, and then press enter again.\n'
+    input_words = []
+    while len(input_words) == 0:
+        inp = Screen().input(prompt=prompt)
+        input_words = [word for word in re.split(r'[\s,]', inp) if word]
+    return input_words
 
 
 def get_random_color(threshold=.85):

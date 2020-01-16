@@ -4,10 +4,6 @@ import pronouncing
 from datamuse import datamuse
 from .utils import *
 
-__author__ = 'Corey Bobco'
-__email__ = 'corey.bobco@gmail.com'
-__version__ = '0.1.3'
-
 api = datamuse.Datamuse()
 str_or_list_of_str = TypeVar('str_or_list_of_str', str, List[str])
 
