@@ -1,8 +1,7 @@
+#!/usr/bin/env python3
 from consolemenu import ConsoleMenu
 from consolemenu.items import FunctionItem, SubmenuItem, CommandItem
 from generativepoetry.pdf import *
-
-menu = ConsoleMenu("Generative Poetry Menu", "What kind of poem would you like to generate?")
 
 def futurist_poem_action():
     fppg = FuturistPoemPDFGenerator()
@@ -24,6 +23,7 @@ def stopword_soup_poem_action():
     ssppg = StopwordSoupPoemPDFGenerator()
     ssppg.generate_pdf()
 
+menu = ConsoleMenu("Generative Poetry Menu", "What kind of poem would you like to generate?")
 #Create menu items for each choice you need:
 futurist_function_item = FunctionItem("Futurist Poem", futurist_poem_action)
 markov_function_item = FunctionItem("Stochastic Jolatic (Markov) Poem", markov_poem_action)
