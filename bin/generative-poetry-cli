@@ -31,7 +31,7 @@ def chaotic_concrete_poem_action():
     ccppg = ChaoticConcretePoemPDFGenerator()
     interactive_loop(ccppg)
 
-
+    
 def character_soup_poem_action():
     csppg = CharacterSoupPoemPDFGenerator()
     csppg.generate_pdf()

@@ -4,6 +4,7 @@ __author__ = 'Corey Bobco'
 __email__ = 'corey.bobco@gmail.com'
 __version__ = '0.2.1'
 
+
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 

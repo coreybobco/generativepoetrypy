@@ -97,6 +97,7 @@ class PoemGenerator:
         last_line_last_word = ''
         random.shuffle(words_for_sampling)
         line_enders = []
+        print("\n")
         for i in range(num_lines):
             rhyme_with = last_line_last_word if i % 2 == 1 else None
             # 67.5 % chance the line starts with an input word or something relate, 32.5% with a common word

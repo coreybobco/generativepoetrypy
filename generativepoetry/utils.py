@@ -39,6 +39,7 @@ unfitting_words.extend(oppressive_words)
 
 def get_input_words():
     prompt = 'To generate a poem, type some words separated by commas or spaces, and then press enter again.\n\n'
+
     input_words = []
     while len(input_words) == 0:
         inp = Screen().input(prompt=prompt)
