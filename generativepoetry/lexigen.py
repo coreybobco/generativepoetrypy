@@ -7,6 +7,7 @@ from .utils import *
 api = datamuse.Datamuse()
 str_or_list_of_str = TypeVar('str_or_list_of_str', str, List[str])
 
+
 def rhymes(input_val: str_or_list_of_str, sample_size=None) -> List[str]:
     """Return a list of rhymes in randomized order for a given word if at least one can be found using the pronouncing
     module (which uses the CMU rhyming dictionary).

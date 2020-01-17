@@ -73,9 +73,9 @@ class PDFGenerator:
 
 class ChaoticConcretePoemPDFGenerator(PDFGenerator):
 
-    def generate_pdf(self, max_words=Optional[int]):
+    def generate_pdf(self, input_words: Optional[List[str]] = [], max_words=Optional[int]):
         self.drawn_strings = []
-        input_words = get_input_words()
+        input_words = get_input_words() if not len(input_words) else input_words
         output_words = input_words + phonetically_related_words(input_words)
         random.shuffle(output_words)
         filename = self.get_filename(input_words)
@@ -150,7 +150,7 @@ class StopwordSoupPoemPDFGenerator(PDFGenerator):
 class MarkovPoemPDFGenerator(PDFGenerator):
     default_font_sizes = [15, 18, 21, 24, 28]
 
-    def generate_pdf(self, orientation: string = 'landscape'):
+    def generate_pdf(self, input_words: Optional[List[str]] = [], orientation: string = 'landscape'):
         self.drawn_strings = []
         self.orientation = orientation
         if self.orientation.lower() == 'landscape':
@@ -169,7 +169,7 @@ class MarkovPoemPDFGenerator(PDFGenerator):
             min_x_coordinate = 15
         else:
             raise Exception('Must choose from the following orientations: portrait, landscape')
-        input_words = get_input_words()
+        input_words = get_input_words() if not len(input_words) else input_words
         poemgen = PoemGenerator()
         poem = poemgen.poem_from_markov(input_words=input_words, min_line_words=min_line_words, num_lines=num_lines,
                                         max_line_words=max_line_words, max_line_length=max_line_length)
@@ -200,16 +200,17 @@ class FuturistPoemPDFGenerator(PDFGenerator):
     connectors = [' + ', ' - ', ' * ', ' % ', ' = ', ' != ', ' :: ']
     default_font_sizes = [15, 18, 21, 24, 28]
 
-    def generate_pdf(self):
+    def generate_pdf(self, input_words: Optional[List[str]] = [],):
         self.drawn_strings = []
-        input_words = get_input_words()
+        input_words = get_input_words() if not len(input_words) else input_words
         word_list = input_words + phonetically_related_words(input_words)
         poem_lines = []
         pgen = PoemGenerator()
         for i in range(25):
             random.shuffle(word_list)
             poem_lines.append(pgen.poem_line_from_word_list(word_list, connectors=self.connectors, max_line_length=40))
-        c = canvas.Canvas(f"{','.join(input_words)}.pdf")
+        filename = self.get_filename(input_words)
+        c = canvas.Canvas(filename)
         y_coordinate = 60
         for line in poem_lines:
             line = random.choice([line, line, line, line.upper()])

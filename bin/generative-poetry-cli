@@ -2,41 +2,70 @@
 from consolemenu import ConsoleMenu
 from consolemenu.items import FunctionItem, SubmenuItem, CommandItem
 from generativepoetry.pdf import *
+from generativepoetry.poemgen import *
+
+reuse_words_prompt = "\nType yes to use the same words again, Otherwise just hit enter.\n"
+
+
+def interactive_loop(poetry_generator):
+    exit_loop = False
+    input_words = get_input_words()
+    while exit_loop == False:
+        poetry_generator.generate_pdf(input_words=input_words)
+        print(reuse_words_prompt)
+        if input() != 'yes':
+            exit_loop = True
+
 
 def futurist_poem_action():
     fppg = FuturistPoemPDFGenerator()
-    fppg.generate_pdf()
+    interactive_loop(fppg)
+
 
 def markov_poem_action():
     mppg = MarkovPoemPDFGenerator()
-    mppg.generate_pdf()
+    interactive_loop(mppg)
+
 
 def chaotic_concrete_poem_action():
     ccppg = ChaoticConcretePoemPDFGenerator()
-    ccppg.generate_pdf()
+    interactive_loop(ccppg)
+
 
 def character_soup_poem_action():
     csppg = CharacterSoupPoemPDFGenerator()
     csppg.generate_pdf()
 
+
 def stopword_soup_poem_action():
     ssppg = StopwordSoupPoemPDFGenerator()
     ssppg.generate_pdf()
 
-menu = ConsoleMenu("Generative Poetry Menu", "What kind of poem would you like to generate?")
-#Create menu items for each choice you need:
-futurist_function_item = FunctionItem("Futurist Poem", futurist_poem_action)
-markov_function_item = FunctionItem("Stochastic Jolatic (Markov) Poem", markov_poem_action)
-chaotic_concrete_function_item = FunctionItem("Chaotic Concrete Poem", chaotic_concrete_poem_action)
-character_soup_function_item = FunctionItem("Character Soup Poem", character_soup_poem_action)
-stopword_soup_function_item = FunctionItem("Stop Word Soup Poem", stopword_soup_poem_action)
 
-#Add the items to the menu:
+def simple_visual_poem_action():
+    exit_loop = False
+    pg = PoemGenerator()
+    input_words = get_input_words()
+    while exit_loop == False:
+        print_poem(pg.poem_from_word_list(input_words))
+        print(reuse_words_prompt)
+        if input() != 'yes':
+            exit_loop = True
+
+
+menu = ConsoleMenu("Generative Poetry Menu", "What kind of poem would you like to generate?")
+futurist_function_item = FunctionItem("Futurist Poem (PDF/Image)", futurist_poem_action)
+markov_function_item = FunctionItem("Stochastic Jolatic (Markov) Poem (Image)", markov_poem_action)
+chaotic_concrete_function_item = FunctionItem("Chaotic Concrete Poem (Image)", chaotic_concrete_poem_action)
+character_soup_function_item = FunctionItem("Character Soup Poem (Image)", character_soup_poem_action)
+stopword_soup_function_item = FunctionItem("Stop Word Soup Poem (Image)", stopword_soup_poem_action)
+simple_visual_function_item = FunctionItem("Visual Puzzle Poem (Terminal-Based)", simple_visual_poem_action)
 menu.append_item(futurist_function_item)
 menu.append_item(markov_function_item)
 menu.append_item(chaotic_concrete_function_item)
 menu.append_item(character_soup_function_item)
 menu.append_item(stopword_soup_function_item)
+menu.append_item(simple_visual_function_item)
 
 menu.start()
 menu.join()
